@@ -1,8 +1,6 @@
 import type React from "react"
 import type { Metadata } from "next"
-import { Geist, Geist_Mono } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
-import { SearchDialog } from "@/components/search-dialog"
 import "./globals.css"
 import { Suspense } from "react"
 
@@ -38,7 +36,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={`font-sans antialiased`}>
         <Suspense fallback={<div>Loading...</div>}>
-          <SearchDialog />
+          
           {children}
         </Suspense>
         <Analytics />
