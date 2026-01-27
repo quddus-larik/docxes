@@ -31,7 +31,7 @@ export function CodeBlock({
 
   return (
     <div className="relative my-4 overflow-hidden rounded-lg border border-border bg-muted">
-      {/* Header */}
+      
       {(filename || language) && (
         <div className="flex items-center justify-between border-b border-border bg-muted/50 px-4 py-2">
           <div className="text-xs font-medium text-muted-foreground">
