@@ -2,10 +2,8 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { getDoc, generateNavigation, getVersions } from "@/lib/docs";
 import { DocSidebar } from "@/components/doc-sidebar";
-import { DocTOC } from "@/components/doc-toc";
-import { DocPagination } from "@/components/doc-pagination";
 import { AppMDXProvider } from "@/lib/mdx-provider";
-import { serialize } from "next-mdx-remote/serialize";
+import { getPlugin } from "@/lib/plugin-registry";
 interface PageProps {
   params: Promise<{
     version: string;
@@ -58,6 +56,9 @@ export default async function DocsPage(props: PageProps) {
   const { version, slug = [] } = params;
   const versions = getVersions();
 
+  const PaginationSlot = getPlugin("pagination");
+  const TOCSlot = getPlugin("TOC");
+
   // Validate version
   if (!versions.includes(version)) {
     notFound();
@@ -108,43 +109,44 @@ export default async function DocsPage(props: PageProps) {
   const { prev, next } = getPagination();
 
   return (
-    <div className="flex h-screen overflow-hidden">
-      <DocSidebar currentPath={currentPath} version={version} />
+    <div className="h-svh">
+      <div className="w-full h-16 border-b-[1.5px]"></div>
+      <div className="flex overflow-hidden h-full">
+        <DocSidebar currentPath={currentPath} version={version} />
 
-      {/* Main content */}
-      <div className="flex-1 overflow-auto lg:ml-0">
-        <div className="mx-auto lg:w-full px-4 py-8 lg:px-8 lg:py-12 lg:pr-96">
-          {doc ? (
-            <>
-              <article className="prose prose-sm dark:prose-invert max-w-none">
-                <h1 className="text-3xl font-bold mb-2">{doc.title}</h1>
-                {doc.description && (
-                  <p className="text-muted-foreground text-lg mb-8">
-                    {doc.description}
-                  </p>
-                )}
-                {doc && <AppMDXProvider source={doc.rawContent}  />}
-              </article>
+        <div className="flex-1 overflow-auto lg:ml-0">
+          <div className="mx-auto lg:w-full px-4 py-8 lg:px-8 lg:py-12 lg:pr-96">
+            {doc ? (
+              <>
+                <article className="prose prose-sm dark:prose-invert max-w-none">
+                  <h1 className="text-3xl font-bold mb-2">{doc.title}</h1>
+                  {doc.description && (
+                    <p className="text-muted-foreground text-lg mb-8">
+                      {doc.description}
+                    </p>
+                  )}
+                  {doc && <AppMDXProvider source={doc.rawContent} />}
+                </article>
 
-              {/* Pagination */}
-              <DocPagination
-                prevHref={prev?.href}
-                prevTitle={prev?.title}
-                nextHref={next?.href}
-                nextTitle={next?.title}
-              />
+                {/* Pagination */}
+                <PaginationSlot
+                  prevHref={prev?.href}
+                  prevTitle={prev?.title}
+                  nextHref={next?.href}
+                  nextTitle={next?.title}
+                />
 
-              {/* TOC */}
-              <DocTOC headings={doc.headings} />
-            </>
-          ) : (
-            <div className="py-12">
-              <h1 className="text-3xl font-bold mb-4">Documentation</h1>
-              <p className="text-muted-foreground mb-8">
-                Select a page from the sidebar to get started.
-              </p>
-            </div>
-          )}
+                <TOCSlot headings={doc.headings} />
+              </>
+            ) : (
+              <div className="py-12">
+                <h1 className="text-3xl font-bold mb-4">Documentation</h1>
+                <p className="text-muted-foreground mb-8">
+                  Select a page from the sidebar to get started.
+                </p>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>
