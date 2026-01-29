@@ -1,85 +1,29 @@
-"use client"
-import { useEffect, useState } from "react"
-import type { DocHeading } from "@/types/types"
+"use client";
 
-interface DocTOCProps { headings: DocHeading[] }
+import type { DocHeading } from "@/types/types";
+import { useDocTOC } from "@/hooks/useTOC";
+import { TocItem } from "@/hooks/useTOC";
 
-interface TocItem { heading: DocHeading; level: number; children: TocItem[] }
+interface DocTOCProps {
+  headings: DocHeading[];
+}
 
 export function DocTOC({ headings }: DocTOCProps) {
-  const [activeId, setActiveId] = useState("")
+  const { activeId, hierarchy, scrollToHeading } = useDocTOC(headings);
 
-  useEffect(() => {
-    const article = document.getElementById("docs-scroll-container")
-    if (!article) return
-    
-    let container = article.parentElement
-    while (container && !container.classList.contains("overflow-auto")) {
-      container = container.parentElement
-    }
-    if (!container) return
-
-    const handleScroll = () => {
-      let active = ""
-      const containerRect = container.getBoundingClientRect()
-      for (const h of headings) {
-        const el = document.getElementById(h.id)
-        if (!el) continue
-        const elRect = el.getBoundingClientRect()
-        if (elRect.top - containerRect.top <= 120) active = h.id
-        else break
-      }
-      setActiveId(active)
-    }
-
-    container.addEventListener("scroll", handleScroll)
-    handleScroll()
-    return () => container.removeEventListener("scroll", handleScroll)
-  }, [headings])
-
-  if (!headings.length) return null
-
-  const buildHierarchy = (headings: DocHeading[]): TocItem[] => {
-    const roots: TocItem[] = []
-    const stack: TocItem[] = []
-
-    for (const heading of headings) {
-      const item: TocItem = { heading, level: heading.level, children: [] }
-      while (stack.length && stack[stack.length - 1].level >= heading.level) stack.pop()
-      if (stack.length === 0) roots.push(item)
-      else stack[stack.length - 1].children.push(item)
-      stack.push(item)
-    }
-
-    return roots
-  }
-
-  const hierarchy = buildHierarchy(headings)
-
-  const scrollToHeading = (id: string) => {
-    const article = document.getElementById("docs-scroll-container")
-    const target = document.getElementById(id)
-    if (!article || !target) return
-    
-    let container = article.parentElement
-    while (container && !container.classList.contains("overflow-auto")) {
-      container = container.parentElement
-    }
-    if (!container) return
-    
-    const targetPosition = target.getBoundingClientRect().top - container.getBoundingClientRect().top + container.scrollTop
-    container.scrollTo({ top: targetPosition - 80, behavior: "smooth" })
-  }
+  if (!headings.length) return null;
 
   const renderItems = (items: TocItem[], depth = 0) => (
     <ul className="space-y-1">
-      {items.map(item => (
+      {items.map((item) => (
         <li key={item.heading.id}>
           <button
             type="button"
             onClick={() => scrollToHeading(item.heading.id)}
             className={`block w-full rounded px-3 py-1 text-left text-sm transition-colors ${
-              activeId === item.heading.id ? "bg-primary/10 text-primary font-bold" : "text-foreground/60 hover:text-foreground"
+              activeId === item.heading.id
+                ? "bg-primary/10 text-primary font-bold"
+                : "text-foreground/60 hover:text-foreground"
             }`}
             style={{ paddingLeft: `${depth * 12 + 12}px` }}
           >
@@ -89,7 +33,7 @@ export function DocTOC({ headings }: DocTOCProps) {
         </li>
       ))}
     </ul>
-  )
+  );
 
   return (
     <aside className="fixed right-4 top-20 hidden w-56 xl:block">
@@ -98,5 +42,5 @@ export function DocTOC({ headings }: DocTOCProps) {
         {renderItems(hierarchy)}
       </nav>
     </aside>
-  )
+  );
 }

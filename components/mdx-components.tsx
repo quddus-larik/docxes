@@ -3,12 +3,12 @@ import { cn } from "@/lib/utils"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
-import { AlertCircle, Info, CheckCircle2, AlertTriangle } from "lucide-react"
+import { AlertCircle, Info, CheckCircle2, AlertTriangle, Link } from "lucide-react"
 import { CodeBlock } from "./code-block"
 import { MdxTable } from "./mdx-table"
 import { MdxTabsCode } from "./mdx-tabs-code"
 
-// -------------------- Helper to extract text from React children --------------------
+
 function getText(children: React.ReactNode | any): string {
   if (typeof children === "string") return children
   if (Array.isArray(children)) return children.map(getText).join("")
@@ -18,7 +18,7 @@ function getText(children: React.ReactNode | any): string {
   return ""
 }
 
-// -------------------- Heading factory --------------------
+// Get Headings
 const Heading = (Tag: React.ElementType, className: string) => {
   return ({ children, ...props }: any) => {
     const text = getText(children)
@@ -36,7 +36,7 @@ const Heading = (Tag: React.ElementType, className: string) => {
   }
 }
 
-// -------------------- MDX Components --------------------
+// MDX Components
 export const mdxComponents = {
   h1: Heading("h1", "mt-8 text-4xl font-bold tracking-tight"),
   h2: Heading("h2", "mt-10 border-b pb-2 text-2xl font-semibold tracking-tight"),
@@ -44,6 +44,25 @@ export const mdxComponents = {
   h4: Heading("h4", "mt-6 text-lg font-semibold"),
   h5: Heading("h5", "mt-4 text-base font-semibold"),
   h6: Heading("h6", "mt-4 text-sm font-semibold"),
+
+  a: ({ href, children }: any) => {
+    const isExternal = href?.startsWith("http")
+
+    return (
+      <a
+        href={href}
+        className="
+          text-black
+          underline
+          underline-offset-4
+          hover:font-semibold
+          transition
+        "
+      >
+        {children}
+      </a>
+    )
+  },
 
   p: ({ children }: any) => <p className="leading-7 not-first:mt-6">{children}</p>,
   strong: ({ children }: any) => <strong className="font-semibold">{children}</strong>,
