@@ -12,8 +12,9 @@ import { Badge } from "@/components/ui/badge";
 import { AlertCircle, Info, CheckCircle2, AlertTriangle } from "lucide-react";
 import { CodeBlock } from "./code-block";
 import { MdxTable } from "./mdx-table";
-import { MdxTabsCode } from "./mdx-tabs-code";
+// import { MdxTabsCode } from "./mdx-tabs-code";
 import { Admonition } from "./admonition";
+import { Step, StepsWithCounter, StepsConnected, CodeStep } from "@/components/mdx-steps";
 
 function getText(children: React.ReactNode | any): string {
   if (typeof children === "string") return children;
@@ -78,7 +79,7 @@ export const mdxComponents = {
   },
 
   p: ({ children }: any) => (
-    <p className="leading-7 not-first:mt-6">{children}</p>
+    <p className="leading-7 not-first:mt-2">{children}</p>
   ),
   strong: ({ children }: any) => (
     <strong className="font-semibold">{children}</strong>
@@ -190,7 +191,12 @@ export const mdxComponents = {
     </Badge>
   ),
 
-  MdxTabsCode,
+  // MdxTabsCode,
+
+  Step,
+  StepsWithCounter,
+  StepsConnected,
+  CodeStep,
 
   Important: (props: any) => <Admonition type="important" {...props} />,
   Note: (props: any) => <Admonition type="note" {...props} />,
