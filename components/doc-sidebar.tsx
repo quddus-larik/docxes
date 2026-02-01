@@ -52,7 +52,6 @@ export function DocSidebar({ version, currentPath }: DocSidebarProps) {
               </Link>
             )}
 
-            {/* Folder with main.mdx */}
             {hasChildren && item.href && (
               <div className="flex items-center">
                 <Link

@@ -14,7 +14,7 @@ import { CodeBlock } from "./code-block";
 import { MdxTable } from "./mdx-table";
 // import { MdxTabsCode } from "./mdx-tabs-code";
 import { Admonition } from "./admonition";
-import { Step, StepsWithCounter, StepsConnected, CodeStep } from "@/components/mdx-steps";
+import { Step, StepsWithCounter, StepsConnected, CodeStep } from "@/components/mdx/mdx-steps";
 
 function getText(children: React.ReactNode | any): string {
   if (typeof children === "string") return children;

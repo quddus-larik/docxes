@@ -1,6 +1,6 @@
 import { MDXRemote } from "next-mdx-remote/rsc";
 import rehypePrettyCode from "rehype-pretty-code";
-import { mdxComponents } from "@/components/mdx-components";
+import { mdxComponents } from "@/components/mdx/mdx-components";
 import { XMeta } from "@/x-meta.config";
 
 interface AppMDXProviderProps {
