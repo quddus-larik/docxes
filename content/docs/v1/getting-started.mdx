@@ -1,0 +1,106 @@
+---
+title: Getting Started
+description: Learn how to install, configure, and use DocX for your documentation project.
+keywords: ["usage", "guide", "setup", "configuration", "docx"]
+order: 2
+---
+
+# Getting Started with DocX
+
+DocX is a production-ready, file-system driven documentation framework built on Next.js 16. It offers a "Formula-like" customization experience, allowing you to completely tailor the look and feel without fighting the framework.
+
+## Installation
+
+Since DocX is a Next.js template, you typically start by cloning the repository or using a starter.
+
+```bash
+git clone https://github.com/your-username/docxes.git my-docs
+cd my-docs
+pnpm install
+```
+
+## Project Structure
+
+- **`content/docs`**: This is where your markdown/MDX files live.
+- **`x-meta.config.ts`**: The central configuration file for your site metadata, theme, and UI components.
+- **`components/`**: React components used in the application.
+
+## Configuration
+
+The heart of DocX is `x-meta.config.ts`. Here you can define your site's identity, enable features, and inject custom components.
+
+```typescript
+// x-meta.config.ts
+export const XMeta = {
+  siteName: "My Docs",
+  description: "Best docs ever",
+  siteUrl: "https://mydocs.com",
+  documentsPath: "content/docs",
+  theme: {
+    mdx: {
+      highlighter: "pretty-code",
+      theme: "github-light",
+    },
+    // Headless Tailwind Customization
+    cssVars: {
+      root: { "radius": "0.5rem" },
+      light: { "primary": "oklch(0.488 0.243 264.376)" },
+      dark: { "primary": "oklch(0.985 0 0)" }
+    }
+  },
+  // Plug your own components
+  interface: {
+    components: {
+      sidebarHeader: MyLogoComponent,
+      sidebarFooter: MyCopyrightComponent,
+      // ...
+    }
+  }
+};
+```
+
+## Creating Documentation
+
+Documentation is versioned and file-system based.
+
+1.  Navigate to `content/docs/v1`.
+2.  Create a new file, e.g., `my-feature.mdx`.
+3.  Add frontmatter:
+
+```mdx
+---
+title: My Feature
+description: Explaining how my feature works.
+order: 1
+---
+
+# My Feature
+
+Write your content here using **Markdown** or React components.
+```
+
+### Folder Structure
+
+Folders created in `content/docs/v1` automatically become sections in the sidebar. To define metadata for a folder (like its title or order), add a `main.mdx` inside that folder.
+
+## Customization
+
+### Theming
+
+DocX uses a "headless" Tailwind approach. You don't need to edit CSS files to change the primary color or border radius. Just update `theme.cssVars` in the config.
+
+### Search
+
+By default, DocX uses a local Fuse.js search provider. You can switch to other providers (like Algolia) by implementing the `SearchProviderInterface` and updating the config.
+
+### Component Slots
+
+You can inject custom content into key areas of the layout:
+
+- **Sidebar Header/Footer**: Add logos, version switchers, or status indicators.
+- **TOC Header/Footer**: Add "Edit this page" links or ad placements.
+
+```typescript
+// x-meta.config.ts
+sidebarHeader: ({ version }) => <div>Version: {version}</div>
+```

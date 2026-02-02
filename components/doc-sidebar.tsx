@@ -1,4 +1,4 @@
-"use client";
+"use client"
 
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -14,7 +14,6 @@ import type { DocNavItem } from "@/types/types";
 import { useDocSidebar } from "@/hooks/useSidebar";
 import { SidebarCacheProvider } from "@/lib/sidebar-cache-context";
 import { cn } from "@/lib/utils";
-import { XMeta } from "@/x-meta.config";
 
 export interface DocSidebarStyles {
   sidebar?: string;
@@ -31,13 +30,15 @@ interface DocSidebarProps {
   version: string;
   currentPath: string;
   styles?: DocSidebarStyles;
+  header?: React.ReactNode;
+  footer?: React.ReactNode;
 }
 
 const defaultStyles: DocSidebarStyles = {
   sidebar:
-    "bg-background border-r border-border w-72",
+    "bg-background border-r border-border w-72 flex flex-col",
   nav:
-    "space-y-1",
+    "flex-1 space-y-1 overflow-y-auto px-3 py-4",
   item:
     "flex items-center gap-2 rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground",
   itemActive:
@@ -53,7 +54,9 @@ const defaultStyles: DocSidebarStyles = {
 export function DocSidebar({
   version,
   currentPath,
-  styles = XMeta.interface.styles.sidebar || {},
+  styles = {},
+  header,
+  footer,
 }: DocSidebarProps) {
   const s = { ...defaultStyles, ...styles };
 
@@ -131,13 +134,13 @@ export function DocSidebar({
                 <button
                   onClick={() => toggleExpanded(getItemId(item))}
                   className={cn(
-                    "p-4 rounded h-full transition-colors",
+                    "p-2 rounded transition-colors",
                     s.toggleBtn
                   )}
                 >
                   <ChevronDown
                     className={cn(
-                      "transition-transform",
+                      "w-4 h-4 transition-transform",
                       expanded && "rotate-180"
                     )}
                   />
@@ -172,12 +175,14 @@ export function DocSidebar({
       {/* Sidebar */}
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-30 transition-transform duration-200 lg:relative lg:translate-x-0",
+          "fixed inset-y-0 left-0 z-30 transition-transform duration-200 lg:relative lg:translate-x-0 h-full",
           s.sidebar,
           open ? "translate-x-0" : "-translate-x-full"
         )}
       >
-        <div className="h-full overflow-y-auto px-3 pt-16 pb-6 lg:pt-4">
+        {header}
+        
+        <div className="flex-1 overflow-y-auto px-3 pt-16 lg:pt-4">
           <nav className={s.nav}>
             {loadingVersions ? (
               <div className={s.sectionTitle}>
@@ -216,6 +221,8 @@ export function DocSidebar({
             )}
           </nav>
         </div>
+
+        {footer}
       </aside>
 
       {/* Overlay */}

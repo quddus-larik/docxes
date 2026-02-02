@@ -4,12 +4,32 @@ import type { DocHeading } from "@/types/types";
 import { useDocTOC } from "@/hooks/useTOC";
 import { TocItem } from "@/hooks/useTOC";
 
+import { cn } from "@/lib/utils";
+import type { DocTOCStyles } from "@/types/interface";
+
 interface DocTOCProps {
   headings: DocHeading[];
+  styles?: DocTOCStyles;
+  header?: React.ReactNode;
+  footer?: React.ReactNode;
 }
 
-export function DocTOC({ headings }: DocTOCProps) {
+const defaultStyles: DocTOCStyles = {
+  container: "fixed right-4 top-20 hidden w-64 xl:block h-[calc(100vh-5rem)] overflow-y-auto",
+  nav: "space-y-2",
+  title: "text-xs font-semibold uppercase tracking-wider text-foreground/60 mb-4",
+  item: "block w-full rounded px-3 py-1 text-left text-sm transition-colors text-foreground/60 hover:text-foreground",
+  itemActive: "bg-primary/10 text-primary font-bold",
+};
+
+export function DocTOC({ 
+  headings,
+  styles = {},
+  header,
+  footer,
+}: DocTOCProps) {
   const { activeId, hierarchy, scrollToHeading } = useDocTOC(headings);
+  const s = { ...defaultStyles, ...styles };
 
   if (!headings.length) return null;
 
@@ -20,11 +40,10 @@ export function DocTOC({ headings }: DocTOCProps) {
           <button
             type="button"
             onClick={() => scrollToHeading(item.heading.id)}
-            className={`block w-full rounded px-3 py-1 text-left text-sm transition-colors ${
-              activeId === item.heading.id
-                ? "bg-primary/10 text-primary font-bold"
-                : "text-foreground/60 hover:text-foreground"
-            }`}
+            className={cn(
+              s.item,
+              activeId === item.heading.id && s.itemActive
+            )}
             style={{ paddingLeft: `${depth * 12 + 12}px` }}
           >
             {item.heading.text}
@@ -36,11 +55,13 @@ export function DocTOC({ headings }: DocTOCProps) {
   );
 
   return (
-    <aside className="fixed right-4 top-20 hidden w-56 xl:block">
-      <nav className="space-y-2">
-        <h3 className="text-xs font-semibold uppercase tracking-wider text-foreground/60">On This Page</h3>
+    <aside className={s.container}>
+      {header}
+      <nav className={s.nav}>
+        <h3 className={s.title}>On This Page</h3>
         {renderItems(hierarchy)}
       </nav>
+      {footer}
     </aside>
   );
 }

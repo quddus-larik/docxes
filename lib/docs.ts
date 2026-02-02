@@ -1,4 +1,4 @@
-import fs from "fs"
+import fs from "fs/promises"
 import path from "path"
 import matter from "gray-matter"
 import { remark } from "remark"
@@ -10,6 +10,16 @@ const DOCS_DIR = path.join(process.cwd(), XMeta.documentsPath)
 
 function isHidden(name: string): boolean {
   return name.includes(".hidden")
+}
+
+// Check if file/dir exists
+async function exists(path: string): Promise<boolean> {
+  try {
+    await fs.access(path)
+    return true
+  } catch {
+    return false
+  }
 }
 
 // Extract headings from markdown
@@ -33,7 +43,7 @@ function extractHeadings(content: string): DocHeading[] {
 
 // Parse markdown file and extract metadata + content
 async function parseDocFile(filePath: string): Promise<Partial<DocFile>> {
-  const fileContent = fs.readFileSync(filePath, "utf-8")
+  const fileContent = await fs.readFile(filePath, "utf-8")
   const { data, content } = matter(fileContent)
 
   // Convert markdown to HTML
@@ -53,23 +63,23 @@ async function parseDocFile(filePath: string): Promise<Partial<DocFile>> {
 export async function getAllDocs(version: string): Promise<DocFile[]> {
   const versionDir = path.join(DOCS_DIR, version)
 
-  if (!fs.existsSync(versionDir)) {
+  if (!(await exists(versionDir))) {
     return []
   }
 
   const docs: DocFile[] = []
 
-  function walkDir(dir: string, slug: string[] = []) {
-    const files = fs.readdirSync(dir)
+  async function walkDir(dir: string, slug: string[] = []) {
+    const files = await fs.readdir(dir)
 
-    files.forEach((file) => {
-      if (isHidden(file)) return
+    for (const file of files) {
+      if (isHidden(file)) continue
 
       const filePath = path.join(dir, file)
-      const stat = fs.statSync(filePath)
+      const stat = await fs.stat(filePath)
 
       if (stat.isDirectory()) {
-        walkDir(filePath, [...slug, file])
+        await walkDir(filePath, [...slug, file])
       } else if (file.endsWith(".mdx") || file.endsWith(".md")) {
         const fileSlug = file.replace(/\.(mdx?|md)$/, "")
         if (fileSlug !== "main") {
@@ -83,10 +93,10 @@ export async function getAllDocs(version: string): Promise<DocFile[]> {
           })
         }
       }
-    })
+    }
   }
 
-  walkDir(versionDir)
+  await walkDir(versionDir)
   return docs
 }
 
@@ -104,20 +114,20 @@ export async function getDoc(version: string, slug: string[]): Promise<DocFile |
 
   let file: string | null = null
 
-  if (fs.existsSync(filePath)) {
+  if (await exists(filePath)) {
     file = filePath
-  } else if (fs.existsSync(fallbackPath)) {
+  } else if (await exists(fallbackPath)) {
     file = fallbackPath
-  } else if (fs.existsSync(indexPath)) {
+  } else if (await exists(indexPath)) {
     file = indexPath
-  } else if (fs.existsSync(indexFallbackPath)) {
+  } else if (await exists(indexFallbackPath)) {
     file = indexFallbackPath
   }
 
   if (!file) return null
 
   // Read raw content
-  const fileContent = fs.readFileSync(file, "utf-8")
+  const fileContent = await fs.readFile(file, "utf-8")
   const { data, content } = matter(fileContent)
 
   // Parse for headings if needed
@@ -144,13 +154,13 @@ function slugify(name: string) {
 
 export async function generateNavigation(version: string): Promise<DocNavItem[]> {
   const versionDir = path.join(DOCS_DIR, version)
-  if (!fs.existsSync(versionDir)) return []
+  if (!(await exists(versionDir))) return []
 
-  function processDir(
+  async function processDir(
     dir: string,
     parentSlugs: string[] = []
-  ): DocNavItem[] {
-    const entries = fs.readdirSync(dir).sort()
+  ): Promise<DocNavItem[]> {
+    const entries = (await fs.readdir(dir)).sort()
     const items: DocNavItem[] = []
 
     const metaMap = new Map<
@@ -167,23 +177,24 @@ export async function generateNavigation(version: string): Promise<DocNavItem[]>
       if (entry.startsWith(".") || isHidden(entry)) continue
 
       const fullPath = path.join(dir, entry)
-      const stat = fs.statSync(fullPath)
+      const stat = await fs.stat(fullPath)
 
       /* ------------------ DIRECTORY ------------------ */
       if (stat.isDirectory()) {
-        if (!hasValidMarkdownFiles(fullPath)) continue
+        if (!(await hasValidMarkdownFiles(fullPath))) continue
 
         const mainMdx = path.join(fullPath, "main.mdx")
         const mainMd = path.join(fullPath, "main.md")
-        const hasMainFile = fs.existsSync(mainMdx) || fs.existsSync(mainMd)
+        const hasMainFile = (await exists(mainMdx)) || (await exists(mainMd))
 
         let title = entry
         let order = 999
 
         if (hasMainFile) {
-          const mainFile = fs.existsSync(mainMdx) ? mainMdx : mainMd
+          const mainFile = (await exists(mainMdx)) ? mainMdx : mainMd
           try {
-            const { data } = matter(fs.readFileSync(mainFile, "utf-8"))
+            const content = await fs.readFile(mainFile, "utf-8")
+            const { data } = matter(content)
             title = data.title || title
             order = data.order ?? order
           } catch {}
@@ -206,7 +217,8 @@ export async function generateNavigation(version: string): Promise<DocNavItem[]>
         let order = 999
 
         try {
-          const { data } = matter(fs.readFileSync(fullPath, "utf-8"))
+          const content = await fs.readFile(fullPath, "utf-8")
+          const { data } = matter(content)
           title = data.title || title
           order = data.order ?? order
         } catch {}
@@ -231,7 +243,7 @@ export async function generateNavigation(version: string): Promise<DocNavItem[]>
       /* ------------------ DIRECTORY ITEM ------------------ */
       if (meta.isDir) {
         const childDir = path.join(dir, name)
-        const children = processDir(childDir, [...parentSlugs, slug])
+        const children = await processDir(childDir, [...parentSlugs, slug])
 
         if (!children.length) continue
 
@@ -262,31 +274,36 @@ export async function generateNavigation(version: string): Promise<DocNavItem[]>
 
 
 // Get available versions
-export function getVersions(): string[] {
-  if (!fs.existsSync(DOCS_DIR)) {
+export async function getVersions(): Promise<string[]> {
+  if (!(await exists(DOCS_DIR))) {
     return []
   }
 
-  return fs
-    .readdirSync(DOCS_DIR)
-    .filter((file) => {
-      if (isHidden(file)) return false
+  const files = await fs.readdir(DOCS_DIR)
+  const versions = []
 
-      const stat = fs.statSync(path.join(DOCS_DIR, file))
-      return stat.isDirectory()
-    })
-    .sort()
+  for (const file of files) {
+      if (isHidden(file)) continue
+      const stat = await fs.stat(path.join(DOCS_DIR, file))
+      if (stat.isDirectory()) {
+          versions.push(file)
+      }
+  }
+  
+  return versions.sort()
 }
 
-function hasValidMarkdownFiles(dir: string): boolean {
-  const files = fs.readdirSync(dir)
-  return files.some((file) => {
-    if (isHidden(file) || file.startsWith(".")) return false
+async function hasValidMarkdownFiles(dir: string): Promise<boolean> {
+  const files = await fs.readdir(dir)
+  for (const file of files) {
+    if (isHidden(file) || file.startsWith(".")) continue
     const filePath = path.join(dir, file)
-    const stat = fs.statSync(filePath)
+    const stat = await fs.stat(filePath)
     if (stat.isDirectory()) {
-      return hasValidMarkdownFiles(filePath)
+      if (await hasValidMarkdownFiles(filePath)) return true
+    } else {
+        if (file.endsWith(".mdx") || file.endsWith(".md")) return true
     }
-    return file.endsWith(".mdx") || file.endsWith(".md")
-  })
+  }
+  return false
 }

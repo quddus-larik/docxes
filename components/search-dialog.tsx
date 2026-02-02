@@ -2,7 +2,6 @@
 
 import { useEffect, useState, useCallback } from "react"
 import { useRouter } from "next/navigation"
-import Fuse from "fuse.js"
 import {
   Command,
   CommandDialog,
@@ -13,74 +12,45 @@ import {
   CommandList,
 } from "@/components/ui/command"
 import { Badge } from "@/components/ui/badge"
-import type { NavItem, SearchableDoc } from "@/types/types"
+import { useSearch } from "@/components/search-context"
+import { SearchResult } from "@/lib/search/types"
 
 export function SearchDialog() {
   const [open, setOpen] = useState(false)
-  const [docs, setDocs] = useState<SearchableDoc[]>([])
   const [selectedVersion, setSelectedVersion] = useState<string | "all">("all")
-  const [versions, setVersions] = useState<string[]>([])
-  const [fuse, setFuse] = useState<any>(null) // use any to avoid TS error
+  const { search, versions, isReady } = useSearch()
   const router = useRouter()
 
-  // Initialize search index
   useEffect(() => {
-    async function initializeSearch() {
-      try {
-        const response = await fetch("/api/docs/search")
-        const data = await response.json()
-        setDocs(data.docs)
-
-        // Extract unique versions
-        const uniqueVersions = Array.from(new Set(data.docs.map((doc: SearchableDoc) => doc.version)))
-        setVersions(uniqueVersions as any)
-
-        // Initialize Fuse
-        setFuse(new Fuse(data.docs, {
-          keys: [
-            { name: "title", weight: 10 },
-            { name: "description", weight: 5 },
-            { name: "keywords", weight: 8 },
-            { name: "content", weight: 1 },
-          ],
-          threshold: 0.3,
-          minMatchCharLength: 2,
-        }))
-      } catch (error) {
-        console.error("Failed to initialize search:", error)
+    const down = (e: KeyboardEvent) => {
+      if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault()
+        setOpen((open) => !open)
       }
     }
-
-    initializeSearch()
+    document.addEventListener("keydown", down)
+    return () => document.removeEventListener("keydown", down)
   }, [])
-
-  const handleSearch = useCallback(
-    (query: string) => {
-      if (!fuse || !query.trim()) return []
-      let results = fuse.search(query)
-      if (selectedVersion !== "all") {
-        results = results.filter((result: any) => result.item.version === selectedVersion)
-      }
-      return results
-    },
-    [fuse, selectedVersion],
-  )
 
   const handleSelect = (href: string) => {
     setOpen(false)
     router.push(href)
   }
 
+  // If search provider is not ready, we could show a loading state or nothing
+  // But usually the button should be visible.
+  
   return (
     <>
       <button
         onClick={() => setOpen(true)}
         className="group relative inline-flex h-10 w-full items-center justify-between rounded-lg border border-input bg-background px-3 py-2 text-sm text-muted-foreground shadow-sm transition-colors hover:bg-accent hover:text-foreground md:w-64 lg:w-96"
+        disabled={!isReady}
       >
         <span className="hidden lg:inline-flex">Search documentation...</span>
         <span className="inline-flex lg:hidden">Search...</span>
         <kbd className="pointer-events-none ml-auto inline-flex h-6 select-none items-center gap-1 rounded border border-muted bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
-          <span className="text-xs">{navigator?.platform?.includes("Mac") ? "⌘" : "Ctrl"}</span>K
+          <span className="text-xs">{typeof navigator !== 'undefined' && navigator?.platform?.includes("Mac") ? "⌘" : "Ctrl"}</span>K
         </kbd>
       </button>
 
@@ -114,10 +84,9 @@ export function SearchDialog() {
             <CommandList className="max-h-75 my-2">
               <CommandEmpty>No results found.</CommandEmpty>
               <SearchResults
-                onSelect={handleSearch}
+                search={search}
                 onNavigate={handleSelect}
                 selectedVersion={selectedVersion}
-                allDocs={docs}
               />
             </CommandList>
           </Command>
@@ -128,71 +97,76 @@ export function SearchDialog() {
 }
 
 function SearchResults({
-  onSelect,
+  search,
   onNavigate,
   selectedVersion,
-  allDocs,
 }: {
-  onSelect: (query: string) => any[]
+  search: (query: string, options?: any) => Promise<SearchResult[]>
   onNavigate: (href: string) => void
   selectedVersion: string
-  allDocs: SearchableDoc[]
 }) {
   const [query, setQuery] = useState("")
-  const [fuse, setFuse] = useState<any>(null)
-
-  useEffect(() => {
-    setFuse(new Fuse(allDocs, {
-      keys: [
-        { name: "title", weight: 10 },
-        { name: "description", weight: 5 },
-        { name: "keywords", weight: 8 },
-        { name: "content", weight: 1 },
-      ],
-      threshold: 0.3,
-      minMatchCharLength: 2,
-    }))
-  }, [allDocs])
+  const [results, setResults] = useState<SearchResult[]>([])
 
   useEffect(() => {
     const input = document.querySelector("[cmdk-input]") as HTMLInputElement
     if (input) {
       const handleChange = () => setQuery(input.value)
+      // Initial value
+      setQuery(input.value)
+      
       input.addEventListener("input", handleChange)
       return () => input.removeEventListener("input", handleChange)
     }
   }, [])
 
-  if (!fuse || !query.trim()) return null
+  useEffect(() => {
+    let active = true;
+    const performSearch = async () => {
+        if (!query.trim()) {
+            setResults([]);
+            return;
+        }
+        
+        const res = await search(query, { version: selectedVersion });
+        if (active) setResults(res);
+    };
+    
+    // Debounce could be added here, but for local it's fast
+    const timer = setTimeout(performSearch, 150);
+    return () => {
+        active = false;
+        clearTimeout(timer);
+    }
+  }, [query, selectedVersion, search]);
 
-  let results = fuse.search(query)
-  if (selectedVersion !== "all") {
-    results = results.filter((r: any) => r.item.version === selectedVersion)
-  }
+
+  if (!query.trim()) return null
 
   return (
     <CommandGroup heading={`Results (${results.length})`}>
-      {results.map((result: any) => (
+      {results.map((result) => (
         <CommandItem
-          key={result.item.id}
-          value={result.item.title}
-          onSelect={() => onNavigate(result.item.href)}
+          key={result.id}
+          value={result.title}
+          onSelect={() => onNavigate(result.href)}
           className="cursor-pointer"
         >
           <div className="flex-1">
-            <div className="font-medium text-sm">{result.item.title}</div>
-            {result.item.description && <div className="text-xs text-muted-foreground line-clamp-1">{result.item.description}</div>}
-            {result.item.keywords && (
+            <div className="font-medium text-sm">{result.title}</div>
+            {result.description && <div className="text-xs text-muted-foreground line-clamp-1">{result.description}</div>}
+            {result.keywords && result.keywords.length > 0 && (
               <div className="flex gap-1 mt-1 flex-wrap">
-                {result.item.keywords.slice(0, 3).map((keyword: string) => (
+                {result.keywords.slice(0, 3).map((keyword: string) => (
                   <Badge key={keyword} variant="secondary" className="text-[10px]">{keyword}</Badge>
                 ))}
               </div>
             )}
           </div>
-          <Badge variant="outline" className="ml-2">{result.item.version}</Badge>
+          {result.version && <Badge variant="outline" className="ml-2">{result.version}</Badge>}
         </CommandItem>
       ))}
     </CommandGroup>
   )
 }
+

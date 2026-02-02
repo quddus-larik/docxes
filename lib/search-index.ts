@@ -1,4 +1,4 @@
-import fs from "fs"
+import fs from "fs/promises"
 import path from "path"
 import matter from "gray-matter"
 import type { SearchableDoc } from "@/types/types"
@@ -19,20 +19,21 @@ function extractPlainText(htmlContent: string): string {
     .trim()
 }
 
-export async function indexAllDocs(): Promise<SearchableDoc[]> {
+async function walkDir(dir: string, version: string, slug: string[] = []): Promise<SearchableDoc[]> {
   const docs: SearchableDoc[] = []
+  
+  try {
+    const files = await fs.readdir(dir)
 
-  function walkDir(dir: string, version: string, slug: string[] = []) {
-    const files = fs.readdirSync(dir)
-
-    files.forEach((file) => {
+    await Promise.all(files.map(async (file) => {
       if (file.startsWith(".") || isHidden(file)) return
 
       const filePath = path.join(dir, file)
-      const stat = fs.statSync(filePath)
+      const stat = await fs.stat(filePath)
 
       if (stat.isDirectory()) {
-        walkDir(filePath, version, [...slug, file])
+        const nestedDocs = await walkDir(filePath, version, [...slug, file])
+        docs.push(...nestedDocs)
       } else if (file.endsWith(".mdx") || file.endsWith(".md")) {
         const fileSlug = file.replace(/\.(mdx?|md)$/, "")
 
@@ -40,7 +41,7 @@ export async function indexAllDocs(): Promise<SearchableDoc[]> {
         if (fileSlug === "main" || fileSlug === "index") return
 
         try {
-          const fileContent = fs.readFileSync(filePath, "utf-8")
+          const fileContent = await fs.readFile(filePath, "utf-8")
           const { data, content } = matter(fileContent)
 
           // Extract plain text from content
@@ -59,25 +60,42 @@ export async function indexAllDocs(): Promise<SearchableDoc[]> {
           console.error(`Error indexing ${filePath}:`, error)
         }
       }
-    })
+    }))
+  } catch (error) {
+    console.error(`Error reading directory ${dir}:`, error)
   }
 
-  // Get all versions
-  if (!fs.existsSync(DOCS_DIR)) {
+  return docs
+}
+
+export async function indexAllDocs(): Promise<SearchableDoc[]> {
+  const docs: SearchableDoc[] = []
+
+  try {
+    await fs.access(DOCS_DIR)
+  } catch {
     return docs
   }
 
-  const versions = fs.readdirSync(DOCS_DIR).filter((file) => {
-    if (isHidden(file)) return false
-    const stat = fs.statSync(path.join(DOCS_DIR, file))
-    return stat.isDirectory()
-  })
+  const items = await fs.readdir(DOCS_DIR)
+  
+  // Identify versions (directories)
+  const versions: string[] = []
+  
+  await Promise.all(items.map(async (item) => {
+      if (isHidden(item)) return;
+      const stat = await fs.stat(path.join(DOCS_DIR, item));
+      if (stat.isDirectory()) versions.push(item);
+  }));
 
-  versions.forEach((version) => {
+  const versionDocs = await Promise.all(versions.map((version) => {
     const versionDir = path.join(DOCS_DIR, version)
-    walkDir(versionDir, version)
-  })
+    return walkDir(versionDir, version)
+  }))
+
+  versionDocs.forEach(d => docs.push(...d))
 
   console.log(`Indexed ${docs.length} documents`)
   return docs
 }
+

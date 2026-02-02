@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button"
 import { ChevronRight } from "lucide-react"
 import type { Metadata } from "next"
 import { XMeta } from "@/x-meta.config"
+import { Badge } from "@/components/ui/badge"
 
 export const metadata: Metadata = {
   title: "Home",
@@ -28,21 +29,20 @@ export const metadata: Metadata = {
 
 export default function Home() {
   return (
-    <main className="flex flex-col items-center justify-center min-h-screen bg-linear-to-b from-background to-muted p-4">
+    <main className="flex flex-col items-center justify-center min-h-screen p-4">
       <div className="text-center space-y-6 max-w-2xl">
-        <h1 className="text-5xl font-bold tracking-tight">Documentation System</h1>
+        <h1 className="text-5xl font-bold tracking-tight">Docxes</h1>
         <p className="text-xl text-muted-foreground">
-          A production-ready, file-system driven documentation platform built with Next.js 16, React 19, TypeScript, and
-          Tailwind CSS v4.
+         A Documentation System Framework for NextJS  that uses Tailwindcss, Shadcn UI and Typescript
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
-          <Link href="/docs/v1">
+          <Link href="/docs/v1/introduction">
             <Button size="lg" className="gap-2">
               View Documentation
               <ChevronRight className="w-4 h-4" />
             </Button>
           </Link>
-          <a href="https://github.com" target="_blank" rel="noopener noreferrer">
+          <a href="https://github.com/quddus-larik/docxes" target="_blank" rel="noopener noreferrer">
             <Button size="lg" variant="outline">
               View on GitHub
             </Button>

@@ -2,6 +2,8 @@ import type React from "react"
 import type { Metadata } from "next"
 import { Analytics } from "@vercel/analytics/next"
 import { XMeta } from "@/x-meta.config"
+import { Providers } from "@/components/providers"
+import { ThemeInjector } from "@/components/theme-injector"
 import "./globals.css"
 import { Suspense } from "react"
 
@@ -93,7 +95,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         {/* Organization Schema */}
         <script
@@ -111,10 +113,13 @@ export default function RootLayout({
         />
       </head>
       <body className={`font-sans antialiased`}>
-        <Suspense fallback={<div>Loading...</div>}>
-          {children}
-        </Suspense>
-        <Analytics />
+        <Providers attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+          <ThemeInjector />
+          <Suspense fallback={<div>Loading...</div>}>
+            {children}
+          </Suspense>
+          <Analytics />
+        </Providers>
       </body>
     </html>
   )

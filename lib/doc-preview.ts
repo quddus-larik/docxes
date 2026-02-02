@@ -1,8 +1,8 @@
 import { notFound } from "next/navigation";
 import { getDoc, getVersions } from "@/lib/docs";
 
-export function validateVersion(version: string) {
-  const versions = getVersions();
+export async function validateVersion(version: string) {
+  const versions = await getVersions();
 
   if (!versions.includes(version)) {
     notFound();
