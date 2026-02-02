@@ -4,7 +4,7 @@ import createMDX from "@next/mdx"
 const withMDX = createMDX({
   extension: /\.mdx?$/,
   options: {
-    jsxImportSource: "@emotion/react",
+    // jsxImportSource: "@emotion/react",
   },
 })
 

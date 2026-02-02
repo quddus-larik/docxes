@@ -3,6 +3,7 @@ import { getPlugin } from "@/lib/plugin-registry";
 import { validateVersion, resolveDoc, getCurrentPath, getPagination } from "@/lib/doc-preview";
 import { generateDocMetadata, generateArticleSchema, generateBreadcrumbSchema } from "@/lib/seo-utils";
 import type { Metadata } from "next";
+import { XMeta } from "@/x-meta.config";
 
 export interface PageProps {
   params: Promise<{
@@ -52,6 +53,10 @@ export async function useContentData(version: string, slug: string[] = []) {
   const SidebarSlot = getPlugin("sidebar");
   const PaginationSlot = getPlugin("pagination");
   const TOCSlot = getPlugin("TOC");
+  
+  // Get Styles and Slots from XMeta directly
+  const styles = XMeta.interface.styles || {};
+  const components = XMeta.interface.components || {};
 
   const articleSchema = doc ? generateArticleSchema({
     title: doc.title,
@@ -72,5 +77,7 @@ export async function useContentData(version: string, slug: string[] = []) {
     TOCSlot,
     articleSchema,
     breadcrumbSchema,
+    styles,
+    components,
   };
 }

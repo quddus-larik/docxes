@@ -14,7 +14,7 @@ export const XMeta: XMetaInterface = {
   theme: {
     mdx: {
       highlighter: "pretty-code",
-      theme: "github-light",
+      theme: "github-dark",
       keepBackground: false,
     },
     cssVars: {
@@ -38,9 +38,27 @@ export const XMeta: XMetaInterface = {
       pagination: DocPagination,
       TOC: DocTOC,
       sidebar: DocSidebar,
+      sidebarHeader: ({ version }: { version: string }) => (
+        <div className="px-6 py-4 border-b">
+          <div className="font-bold text-lg">DocX {version}</div>
+        </div>
+      ),
+      sidebarFooter: () => (
+        <div className="px-6 py-4 border-t text-xs text-muted-foreground">
+          © 2026 Lixril. Built with DocX.
+        </div>
+      ),
     },
     styles: {
-      
+      sidebar: {
+        sidebar: "bg-background border-r border-border w-64 flex flex-col",
+      },
+      TOC: {
+        title: "text-xs font-bold uppercase tracking-widest text-primary mb-4",
+      },
+      pagination: {
+        container: "flex items-center justify-between gap-6 pt-10 mt-16 border-t",
+      }
     },
   },
 };

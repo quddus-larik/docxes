@@ -18,7 +18,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   ]
 
-  const versions = getVersions()
+  const versions = await getVersions()
 
   for (const version of versions) {
     // Add version index
