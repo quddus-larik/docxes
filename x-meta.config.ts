@@ -9,7 +9,7 @@ export const XMeta: XMetaInterface = {
   siteName: "DocX - lixril",
   description:
     "Comprehensive documentation for DocX - A dynamic documentation generator framework built with Next.js",
-  siteUrl: process.env.NEXT_PUBLIC_SITE_URL || "https://docxify.vercel.com",
+  siteUrl: process.env.NEXT_PUBLIC_SITE_URL || "https://docxes.vercel.app",
   documentsPath: "content/docs",
   theme: {
     mdx: {
@@ -21,7 +21,7 @@ export const XMeta: XMetaInterface = {
   searchProvider: "<void>",
   interface: {
     components: {
-      button: GButton,
+      button: GButton, // test code
       pagination: DocPagination,
       TOC: DocTOC,
       sidebar: DocSidebar,
