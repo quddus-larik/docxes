@@ -3,7 +3,7 @@ import { DocSidebar } from "./components/doc-sidebar";
 import { DocTOC } from "./components/doc-toc";
 import { Badge } from "./components/ui/badge";
 import { GButton } from "./plugins/deftheme/GButton";
-import { DocXInterface, XMetaInterface } from "./types/interface";
+import { XMetaInterface } from "./types/interface";
 // Sitename
 
 export const XMeta: XMetaInterface = {
@@ -51,7 +51,8 @@ export const XMeta: XMetaInterface = {
     styles: {
       sidebar: {
         sidebar: "bg-background border-r border-border flex flex-col",
-        toggleBtn: "first-"
+        toggleBtn: "bg-green-400 rounded-r-full",
+        itemActive: "bg-blue-400"
       },
       TOC: {
         title: "text-xs font-bold uppercase tracking-widest text-primary mb-4",
