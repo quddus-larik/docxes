@@ -118,19 +118,44 @@ export const XMeta = xMetaConfig({
       </div>
     ),
     styles: {
-      sidebar: "bg-background border-r border-border flex flex-col",
-      toggleBtn: "bg-green-400 rounded-r-full",
-      itemActive: "bg-blue-400"
+      
     },
+    // Example: Custom Sidebar Item rendering But not work: directly passing server to client component 
+    // item: ({ item, isActive, depth, onClick }) => (
+    //   <a 
+    //     href={item.href} 
+    //     onClick={onClick}
+    //     className={`block px-4 py-2 ${isActive ? 'bg-primary text-white' : 'hover:bg-muted'}`}
+    //     style={{ paddingLeft: `${depth * 12 + 16}px` }}
+    //   >
+    //     {item.title}
+    //   </a>
+    // ),
   },
 
   toc: {
     styles: {
       title: "text-xs font-bold uppercase tracking-widest text-primary mb-4",
-    }
+    },
+    // Example: Custom TOC Item rendering But not work: directly passing server to client component 
+    // item: ({ heading, isActive, onClick }) => (
+    //   <button 
+    //     onClick={onClick}
+    //     className={`text-left text-sm ${isActive ? 'text-primary font-bold' : 'text-muted-foreground'}`}
+    //   >
+    //     {heading.text}
+    //   </button>
+    // ),
   },
 
   pagination: {
+    // Example of a custom pagination UI using an arrow function
+    component: ({ prev, next }) => (
+      <div className="flex justify-between mt-10 border-t pt-5">
+        {prev && <a href={prev.href}>← {prev.title}</a>}
+        {next && <a href={next.href}>{next.title} →</a>}
+      </div>
+    ),
     styles: {
       container: "flex items-center justify-between gap-6 pt-10 mt-16 border-t",
     }
@@ -140,11 +165,13 @@ export const XMeta = xMetaConfig({
     cssVars: {
       light: {
         "primary": "oklch(0.21 0.006 285.885)",
-        "primary-foreground": "oklch(0.985 0 0)"
+        "primary-foreground": "oklch(0.985 0 0)",
+        "secondary": "oklch(0.70 0.19 338)"
       },
       dark: {
-        "primary": "oklch(0.92 0.004 286.32)",
-        "primary-foreground": "oklch(0.21 0.006 285.885)"
+        "primary": "#A161E2",
+        "primary-foreground": "#E8F0FD",
+        "secondary": "#5A2E93"
       }
     }
   },
