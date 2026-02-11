@@ -1,4 +1,4 @@
-import { generateNavigation } from "@/lib/docs";
+import { generateNavigation, getVersions } from "@/lib/docs";
 import { getPlugin } from "@/lib/plugin-registry";
 import { validateVersion, resolveDoc, getCurrentPath, getPagination } from "@/lib/doc-preview";
 import { generateDocMetadata, generateArticleSchema, generateBreadcrumbSchema } from "@/lib/seo-utils";
@@ -45,7 +45,11 @@ export async function generateMetadata(props: PageProps): Promise<Metadata> {
 export async function useContentData(version: string, slug: string[] = []) {
   await validateVersion(version);
 
-  const navigation = await generateNavigation(version);
+  const [navigation, allVersions] = await Promise.all([
+    generateNavigation(version),
+    getVersions(),
+  ]);
+
   const doc = await resolveDoc(version, slug);
   const currentPath = getCurrentPath(version, slug);
   const { prev, next } = getPagination(navigation, currentPath);
@@ -61,9 +65,11 @@ export async function useContentData(version: string, slug: string[] = []) {
     sidebar: XMeta.sidebar?.component || getPlugin("sidebar"),
     sidebarHeader: XMeta.sidebar?.header,
     sidebarFooter: XMeta.sidebar?.footer,
+    sidebarItem: XMeta.sidebar?.item,
     TOC: XMeta.toc?.component || getPlugin("TOC"),
     TOCHeader: XMeta.toc?.header,
     TOCFooter: XMeta.toc?.footer,
+    tocItem: XMeta.toc?.item,
     pagination: XMeta.pagination?.component || getPlugin("pagination"),
   };
 
@@ -81,6 +87,8 @@ export async function useContentData(version: string, slug: string[] = []) {
     currentPath,
     prev,
     next,
+    navigation,
+    allVersions,
     SidebarSlot: components.sidebar,
     PaginationSlot: components.pagination,
     TOCSlot: components.TOC,
