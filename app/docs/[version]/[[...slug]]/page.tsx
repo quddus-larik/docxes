@@ -11,6 +11,8 @@ export default async function DocsPage({ params }: PageProps) {
     currentPath,
     prev,
     next,
+    navigation,
+    allVersions,
     SidebarSlot,
     PaginationSlot,
     TOCSlot,
@@ -23,8 +25,10 @@ export default async function DocsPage({ params }: PageProps) {
   const {
     sidebarHeader: SidebarHeader,
     sidebarFooter: SidebarFooter,
+    sidebarItem: SidebarItem,
     TOCHeader,
     TOCFooter,
+    tocItem: TOCItem,
   } = components || {};
 
   return (
@@ -40,6 +44,9 @@ export default async function DocsPage({ params }: PageProps) {
           <SidebarSlot 
             currentPath={currentPath} 
             version={version} 
+            items={navigation}
+            versions={allVersions}
+            item={SidebarItem}
             styles={styles?.sidebar} 
             header={SidebarHeader ? <SidebarHeader version={version} /> : null}
             footer={SidebarFooter ? <SidebarFooter version={version} /> : null}
@@ -59,15 +66,14 @@ export default async function DocsPage({ params }: PageProps) {
 
                   {/* Pagination */}
                   <PaginationSlot
-                    prevHref={prev?.href}
-                    prevTitle={prev?.title}
-                    nextHref={next?.href}
-                    nextTitle={next?.title}
+                    prev={prev}
+                    next={next}
                     styles={styles?.pagination}
                   />
 
                   <TOCSlot 
                     headings={meta.headings} 
+                    item={TOCItem}
                     styles={styles?.TOC} 
                     header={TOCHeader ? <TOCHeader /> : null}
                     footer={TOCFooter ? <TOCFooter /> : null}
