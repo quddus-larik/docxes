@@ -12,7 +12,6 @@ import {
 import { ChevronDown, Menu, X } from "lucide-react";
 import type { DocNavItem } from "@/types/types";
 import { useDocSidebar } from "@/hooks/useSidebar";
-import { SidebarCacheProvider } from "@/lib/sidebar-cache-context";
 import { cn } from "@/lib/utils";
 
 export interface DocSidebarStyles {
@@ -29,6 +28,9 @@ export interface DocSidebarStyles {
 interface DocSidebarProps {
   version: string;
   currentPath: string;
+  items?: DocNavItem[];
+  versions?: string[];
+  item?: React.ComponentType<{ item: DocNavItem; isActive: boolean; depth: number; onClick: () => void }>;
   styles?: DocSidebarStyles;
   header?: React.ReactNode;
   footer?: React.ReactNode;
@@ -42,7 +44,7 @@ const defaultStyles: DocSidebarStyles = {
   item:
     "flex items-center gap-2 rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground",
   itemActive:
-    "bg-muted text-foreground font-medium",
+    "bg-primary/10 text-primary font-medium",
   sectionTitle:
     "px-3 pt-4 pb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground",
   toggleBtn:
@@ -54,6 +56,9 @@ const defaultStyles: DocSidebarStyles = {
 export function DocSidebar({
   version,
   currentPath,
+  items: initialItems,
+  versions: initialVersions,
+  item: ItemComponent,
   styles = {},
   header,
   footer,
@@ -65,14 +70,19 @@ export function DocSidebar({
     setOpen,
     expandedItems,
     toggleExpanded,
-    items,
+    items: hookItems,
     loading,
-    versions,
+    versions: hookVersions,
     loadingVersions,
     isActive,
     shouldExpand,
     getItemId,
   } = useDocSidebar(version, currentPath);
+
+  const items = initialItems || hookItems;
+  const versions = initialVersions || hookVersions;
+  const isNavLoading = !initialItems && loading;
+  const isVersionsLoading = !initialVersions && loadingVersions;
 
   const NavItems = ({
     items,
@@ -96,13 +106,27 @@ export function DocSidebar({
           paddingLeft: `${depth * 12 + 12}px`,
         };
 
+        const active = isActive(item.href);
+        const onClick = () => setOpen(false);
+
+        if (ItemComponent) {
+          return (
+            <li key={getItemId(item)} className="list-none">
+              <ItemComponent item={item} isActive={active} depth={depth} onClick={onClick} />
+              {hasChildren && expanded && (
+                <NavItems items={item.items!} depth={depth + 1} />
+              )}
+            </li>
+          );
+        }
+
         return (
           <li key={getItemId(item)} className="list-none">
             {/* File */}
             {!hasChildren && item.href && (
               <Link
                 href={item.href}
-                onClick={() => setOpen(false)}
+                onClick={onClick}
                 className={baseItem}
                 style={paddingLeft}
               >
@@ -162,7 +186,7 @@ export function DocSidebar({
   );
 
   return (
-    <SidebarCacheProvider>
+    <>
       {/* Mobile toggle - Pure Tailwind/HTML */}
       <button
         className="fixed top-4 left-4 z-40 lg:hidden p-2 bg-background border rounded-md shadow-sm"
@@ -184,7 +208,7 @@ export function DocSidebar({
         
         <div className="flex-1 overflow-y-auto px-3 pt-16 lg:pt-4">
           <nav className={cn("flex flex-col gap-4", s.nav)}>
-            {loadingVersions ? (
+            {isVersionsLoading ? (
               <div className={s.sectionTitle}>Loading versions…</div>
             ) : versions.length > 1 ? (
               <div className="px-3">
@@ -204,7 +228,7 @@ export function DocSidebar({
               <div className={s.sectionTitle}>{version.toUpperCase()}</div>
             )}
 
-            {loading ? (
+            {isNavLoading ? (
               <div className="px-3 py-2 text-xs text-muted-foreground italic">
                 Loading navigation…
               </div>
@@ -227,6 +251,6 @@ export function DocSidebar({
           onClick={() => setOpen(false)}
         />
       )}
-    </SidebarCacheProvider>
+    </>
   );
 }
