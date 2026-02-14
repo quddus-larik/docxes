@@ -63,7 +63,7 @@ export const XMeta = createConfig({
 });`;
 
   return (
-    <div className="flex flex-col bg-background overflow-y-scroll">
+    <div className="flex flex-col bg-background">
       {/* Hero Section */}
       <section className="relative py-24 px-6 text-center lg:py-32">
         <div className="container mx-auto max-w-5xl">
