@@ -6,6 +6,7 @@ import { ModeToggle } from "./components/mode-toggle";
 import { Badge } from "./components/ui/badge";
 import { GButton } from "./plugins/deftheme/GButton";
 import { XMetaConfig } from "./types/interface";
+import { CurvedUI } from "./marketplace/curved-ui";
 
 /**
  * Default configuration for DocX.
@@ -97,52 +98,24 @@ export default xMetaConfig;
 
 /**
  * Resolved configuration instance
+ * To switch to Curved UI, simply merge it here: xMetaConfig(CurvedUI)
  */
 export const XMeta = xMetaConfig({
+  ...CurvedUI,
   siteName: "DocX - lixril",
   description: "Comprehensive documentation for DocX",
   siteUrl: process.env.NEXT_PUBLIC_SITE_URL || "https://docxes.vercel.app",
   
+  // You can still override CurvedUI settings here if needed
   sidebar: {
+    ...CurvedUI.sidebar,
     header: ({ version }: { version: string }) => (
       <div className="px-6 py-4 border-b">
         <div className="font-bold text-lg">Docxes</div>
         <Badge>{version}</Badge>
       </div>
     ),
-    footer: () => (
-      <div className="px-6 py-4 border-t text-xs text-muted-foreground">
-        © 2026 Lixril. Built with Docxes.
-      </div>
-    ),
   },
 
-  toc: {
-    styles: {
-      title: "text-xs font-bold uppercase tracking-widest text-primary mb-4",
-    },
-  },
-
-  pagination: {
-    styles: {
-      container: "flex items-center justify-between gap-6 pt-10 mt-16 border-t",
-    }
-  },
-
-  theme: {
-    cssVars: {
-      light: {
-        "primary": "oklch(0.21 0.006 285.885)",
-        "primary-foreground": "oklch(0.985 0 0)",
-        "secondary": "oklch(0.70 0.19 338)"
-      },
-      dark: {
-        "primary": "#A161E2",
-        "primary-foreground": "#E8F0FD",
-        "secondary": "#5A2E93"
-      }
-    }
-  },
-  
   button: GButton,
 });
