@@ -13,19 +13,24 @@ export interface TocItem {
 export function useDocTOC(headings: DocHeading[]) {
   const [activeId, setActiveId] = useState("");
   const observer = useRef<IntersectionObserver | null>(null);
+  const visibleHeadings = useRef<Map<string, boolean>>(new Map());
 
   useEffect(() => {
     const handleIntersections = (entries: IntersectionObserverEntry[]) => {
-      // Find the first entry that is intersecting
-      const visibleEntry = entries.find((entry) => entry.isIntersecting);
-      if (visibleEntry) {
-        setActiveId(visibleEntry.target.id);
+      entries.forEach((entry) => {
+        visibleHeadings.current.set(entry.target.id, entry.isIntersecting);
+      });
+
+      // Find the first visible heading from the top
+      const firstVisible = headings.find((h) => visibleHeadings.current.get(h.id));
+      if (firstVisible) {
+        setActiveId(firstVisible.id);
       }
     };
 
     observer.current = new IntersectionObserver(handleIntersections, {
-      rootMargin: "-100px 0% -80% 0%",
-      threshold: 1.0,
+      rootMargin: "-80px 0% -80% 0%",
+      threshold: 0,
     });
 
     headings.forEach((heading) => {
@@ -33,7 +38,10 @@ export function useDocTOC(headings: DocHeading[]) {
       if (el) observer.current?.observe(el);
     });
 
-    return () => observer.current?.disconnect();
+    return () => {
+      observer.current?.disconnect();
+      visibleHeadings.current.clear();
+    };
   }, [headings]);
 
   // Build nested hierarchy
