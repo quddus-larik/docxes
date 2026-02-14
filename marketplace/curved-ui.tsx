@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { XMetaConfig, HeaderProps } from "@/types/interface";
 import { cn } from "@/lib/utils";
 import { SearchDialog } from "@/components/search-dialog";
+import { ModeToggle } from "@/components/mode-toggle";
 
 /**
  * Curved UI Customization for DocX
@@ -46,7 +47,7 @@ export const CurvedUI: Partial<XMetaConfig> = {
       </div>
     ),
     styles: {
-      sidebar: "bg-background/50 backdrop-blur-md border-r-0 w-80",
+      sidebar: "bg-background/50 backdrop-blur-md border-r-0 w-80 shrink-0",
       nav: "px-4 pb-8 space-y-2",
       item: "flex items-center gap-3 rounded-full px-5 py-2.5 text-sm font-medium text-muted-foreground transition-all duration-200 hover:bg-primary/5 hover:text-primary hover:pl-6",
       itemActive: "bg-primary text-primary-foreground shadow-lg shadow-primary/25 hover:text-primary-foreground hover:bg-primary",
@@ -56,7 +57,7 @@ export const CurvedUI: Partial<XMetaConfig> = {
 
   toc: {
     styles: {
-      container: "fixed right-8 top-24 hidden w-64 xl:block p-6 rounded-[2rem] bg-secondary/30 backdrop-blur-sm border border-border/50",
+      container: "sticky top-24 w-full p-6 rounded-[2rem] bg-secondary/30 backdrop-blur-sm border border-border/50",
       title: "text-[11px] font-black uppercase tracking-[0.2em] text-primary mb-6 flex items-center gap-2 before:content-[''] before:w-1.5 before:h-1.5 before:bg-primary before:rounded-full",
       item: "rounded-full px-4 py-2 text-[13px] font-medium transition-all duration-200 text-muted-foreground hover:text-primary hover:bg-primary/5",
       itemActive: "bg-primary/10 text-primary font-bold pl-5",
@@ -88,6 +89,7 @@ export const CurvedUI: Partial<XMetaConfig> = {
           <div className="hidden sm:block">
             <SearchDialog />
           </div>
+          <ModeToggle />
         </div>
       </div>
     </header>

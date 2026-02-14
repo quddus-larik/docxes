@@ -3,6 +3,7 @@ import Link from "next/link";
 import { XMetaConfig, HeaderProps } from "@/types/interface";
 import { cn } from "@/lib/utils";
 import { SearchDialog } from "@/components/search-dialog";
+import { ModeToggle } from "@/components/mode-toggle";
 
 /**
  * Shadcn UI Customization for DocX
@@ -34,7 +35,7 @@ export const ShadcnUI: Partial<XMetaConfig> = {
 
   sidebar: {
     styles: {
-      sidebar: "bg-background border-r w-64",
+      sidebar: "bg-background border-r w-64 shrink-0",
       nav: "px-4 py-6 space-y-1",
       item: "flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground",
       itemActive: "bg-accent text-accent-foreground border",
@@ -44,7 +45,7 @@ export const ShadcnUI: Partial<XMetaConfig> = {
 
   toc: {
     styles: {
-      container: "fixed right-12 top-24 hidden w-56 xl:block",
+      container: "sticky top-24 w-full",
       title: "text-sm font-bold tracking-tight mb-4",
       item: "text-xs py-1 text-muted-foreground hover:text-foreground transition-colors",
       itemActive: "text-foreground font-semibold",
@@ -62,7 +63,7 @@ export const ShadcnUI: Partial<XMetaConfig> = {
   },
 
   header: ({ siteName }: HeaderProps) => (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="sticky top-0 px-2 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-14 items-center justify-between">
         <div className="flex items-center gap-6">
           <Link href="/" className="font-bold text-lg tracking-tight hover:opacity-80 transition-opacity">
@@ -74,6 +75,7 @@ export const ShadcnUI: Partial<XMetaConfig> = {
         </div>
         <div className="flex items-center gap-3">
           <SearchDialog />
+          <ModeToggle />
         </div>
       </div>
     </header>

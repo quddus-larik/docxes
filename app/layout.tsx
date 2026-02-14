@@ -115,7 +115,7 @@ export default async function RootLayout({
           }}
         />
       </head>
-      <body className={`font-sans antialiased overflow-y-hidden`}>
+      <body className={`font-sans antialiased`}>
         <Providers attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           <ThemeInjector />
           <div className="relative flex min-h-svh flex-col">

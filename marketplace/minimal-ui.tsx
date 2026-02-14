@@ -1,5 +1,8 @@
 import React from "react";
-import { XMetaConfig } from "@/types/interface";
+import Link from "next/link";
+import { XMetaConfig, HeaderProps } from "@/types/interface";
+import { ModeToggle } from "@/components/mode-toggle";
+import { SearchDialog } from "@/components/search-dialog";
 
 /**
  * Minimal UI Customization for DocX
@@ -24,7 +27,7 @@ export const MinimalUI: Partial<XMetaConfig> = {
 
   sidebar: {
     styles: {
-      sidebar: "bg-background w-64 border-r-0",
+      sidebar: "bg-background w-64 border-r-0 shrink-0",
       nav: "px-6 py-12",
       item: "px-0 py-2 text-sm font-medium border-l-2 border-transparent transition-all hover:pl-2 hover:text-primary",
       itemActive: "border-primary text-primary pl-2 bg-transparent",
@@ -34,7 +37,7 @@ export const MinimalUI: Partial<XMetaConfig> = {
 
   toc: {
     styles: {
-      container: "fixed right-12 top-24 hidden w-48 xl:block",
+      container: "sticky top-24 w-full",
       title: "text-[10px] font-bold uppercase tracking-[0.3em] text-muted-foreground/30 mb-8",
       item: "px-0 py-1.5 text-xs text-muted-foreground hover:text-primary transition-colors",
       itemActive: "text-primary font-medium",

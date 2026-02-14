@@ -16,7 +16,7 @@ interface DocTOCProps {
 }
 
 const defaultStyles: DocTOCStyles = {
-  container: "fixed right-4 top-20 hidden w-64 xl:block h-[calc(100vh-5rem)] overflow-y-auto",
+  container: "sticky top-20 w-full",
   nav: "space-y-2",
   title: "text-xs font-semibold uppercase tracking-wider text-foreground/60 mb-4",
   item: "block w-full rounded px-3 py-1 text-left text-sm transition-colors text-foreground/60 hover:text-foreground",

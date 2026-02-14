@@ -39,9 +39,9 @@ interface DocSidebarProps {
 
 const defaultStyles: DocSidebarStyles = {
   sidebar:
-    "bg-background border-r border-border w-72 flex flex-col",
+    "bg-background border-r border-border w-72 flex flex-col shrink-0",
   nav:
-    "flex-1 space-y-1 overflow-y-auto px-3 py-4",
+    "flex-1 space-y-1 px-3 py-4",
   item:
     "flex items-center gap-2 rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground",
   itemActive:
@@ -201,7 +201,7 @@ export function DocSidebar({
       {/* Sidebar */}
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-30 transition-transform duration-200 lg:relative lg:translate-x-0 h-full",
+          "fixed inset-y-0 left-0 z-30 transition-transform duration-200 lg:sticky lg:top-14 lg:self-start lg:translate-x-0 h-[calc(100vh-3.5rem)]",
           s.sidebar,
           open ? "translate-x-0" : "-translate-x-full"
         )}
