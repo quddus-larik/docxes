@@ -47,6 +47,7 @@
     "cmdk": "1.0.4",
     "date-fns": "4.1.0",
     "embla-carousel-react": "8.5.1",
+    "flexsearch": "^0.8.212",
     "fuse.js": "7.1.0",
     "gray-matter": "^4.0.3",
     "input-otp": "1.4.1",
@@ -75,6 +76,7 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.3",
     "@tailwindcss/postcss": "^4.1.9",
+    "@types/flexsearch": "^0.7.42",
     "@types/node": "^22",
     "@types/react": "^19",
     "@types/react-dom": "^19",

@@ -1,8 +1,9 @@
 import React from "react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
-import { XMetaConfig } from "@/types/interface";
+import { XMetaConfig, HeaderProps } from "@/types/interface";
 import { cn } from "@/lib/utils";
+import { SearchDialog } from "@/components/search-dialog";
 
 /**
  * Curved UI Customization for DocX
@@ -72,7 +73,7 @@ export const CurvedUI: Partial<XMetaConfig> = {
     }
   },
 
-  header: ({ siteName }: { siteName: string }) => (
+  header: ({ siteName, versions }: HeaderProps) => (
     <header className="sticky top-4 z-50 w-[calc(100%-2rem)] mx-auto mt-4 rounded-full border bg-background/80 backdrop-blur-xl shadow-lg shadow-black/5">
       <div className="container flex h-14 items-center justify-between px-6">
         <div className="flex items-center gap-8">
@@ -86,7 +87,7 @@ export const CurvedUI: Partial<XMetaConfig> = {
         </div>
         <div className="flex items-center gap-4">
           <div className="hidden sm:block">
-            {/* Search slot usually handled by layout */}
+            <SearchDialog />
           </div>
         </div>
       </div>

@@ -1,5 +1,7 @@
 import { CurvedUI } from "@/marketplace/curved-ui";
+import { ShadcnUI } from "@/marketplace/shadcn-ui";
 import { createConfig } from "@/lib/configuration";
+import { SearchDialog } from "@/components/search-dialog";
 
 /**
  * 💡 TIP FOR DEVELOPERS:
@@ -10,36 +12,17 @@ import { createConfig } from "@/lib/configuration";
 
 /**
  * 🚀 ACTIVE CONFIG
- * To switch designs, simply swap the spread theme (e.g., ...MinimalUI or ...MinimalUI)
+ * To switch designs, simply swap the spread theme (e.g., ...ShadcnUI, ...CurvedUI or ...MinimalUI)
  */
 export const XMeta = createConfig({
-  ...CurvedUI, // <-- CHANGE THEME HERE
+  ...ShadcnUI, // <-- ACTIVE THEME: SHADCN UI (B/W)
   siteName: "DocXes",
   siteUrl: process.env.NEXT_PUBLIC_SITE_URL || "https://docxes.vercel.app",
+  searchProvider: "flexsearch",
 
-  // 1. CUSTOM ROOT HEADER DESIGN
-  // You can completely redefine the top navigation here
-  header: ({ siteName, versions }) => (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur-md">
-      <div className="container flex h-16 items-center justify-between">
-        <div className="flex items-center gap-4">
-          <div className="font-bold text-xl tracking-tight">{siteName}</div>
-          <nav className="hidden md:flex gap-4 text-sm font-medium text-muted-foreground">
-            <a href="/docs" className="hover:text-primary transition-colors">Documentation</a>
-            <a href="/mvp" className="hover:text-primary transition-colors">Release Notes</a>
-          </nav>
-        </div>
-        <div className="flex items-center gap-2">
-          {/* Version Picker or Search can be added here */}
-        </div>
-      </div>
-    </header>
-  ),
-
-  // 2. DELETE SIDEBAR HEADER
-  // Simply set header to undefined to remove it from the sidebar
+  // DELETE SIDEBAR HEADER (OPTIONAL)
   sidebar: {
-    ...CurvedUI.sidebar,
+    ...ShadcnUI.sidebar,
     header: undefined, 
   }
 });

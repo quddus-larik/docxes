@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { SearchProviderInterface, SearchResult, SearchOptions } from "@/lib/search/types";
 import { LocalSearchProvider } from "@/lib/search/providers/local";
+import { FlexSearchProvider } from "@/lib/search/providers/flexsearch";
 import { XMeta } from "@/x-meta.config";
 
 interface SearchContextType {
@@ -34,6 +35,9 @@ export function SearchProvider({ children, provider: customProvider }: SearchPro
             case 'local':
                 activeProvider = new LocalSearchProvider();
                 break;
+            case 'flexsearch':
+                activeProvider = new FlexSearchProvider();
+                break;
             // Add other providers here (e.g. 'algolia')
             default:
                 if (XMeta.searchProvider !== '<void>') {
@@ -47,10 +51,7 @@ export function SearchProvider({ children, provider: customProvider }: SearchPro
       if (activeProvider) {
           await activeProvider.initialize();
           setProvider(activeProvider);
-          
-          if (activeProvider instanceof LocalSearchProvider) {
-              setVersions(activeProvider.getVersions());
-          }
+          setVersions(activeProvider.getVersions());
       }
       
       setIsReady(true);

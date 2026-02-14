@@ -45,8 +45,8 @@ export function DocPagination({
       {next ? (
         <Link href={next.href} className={cn(s.button, "text-right items-end")}>
           <span className={s.nextLabel}>
-            Next
             <ArrowRight className="w-3 h-3 transition-transform group-hover:translate-x-1" />
+            Next
           </span>
           <span className={s.title}>{next.title}</span>
         </Link>
