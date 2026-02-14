@@ -1,65 +1,30 @@
-import { DocPagination } from "./components/doc-pagination";
-import { DocSidebar } from "./components/doc-sidebar";
-import { DocTOC } from "./components/doc-toc";
-import { Badge } from "./components/ui/badge";
-import { GButton } from "./plugins/deftheme/GButton";
-import { XMetaInterface } from "./types/interface";
-// Sitename
+import { CurvedUI } from "@/marketplace/curved-ui";
+import { ShadcnUI } from "@/marketplace/shadcn-ui";
+import { createConfig } from "@/lib/configuration";
+import { SearchDialog } from "@/components/search-dialog";
 
-export const XMeta: XMetaInterface = {
-  siteName: "DocX - lixril",
-  description:
-    "Comprehensive documentation for DocX - A dynamic documentation generator framework built with Next.js",
+/**
+ * 💡 TIP FOR DEVELOPERS:
+ * This file is your primary control center. You should mostly edit this file
+ * and the 'content/' directory. Avoid changing files in 'lib/' or 'app/' 
+ * unless you are extending the core framework logic.
+ */
+
+/**
+ * 🚀 ACTIVE CONFIG
+ * To switch designs, simply swap the spread theme (e.g., ...ShadcnUI, ...CurvedUI or ...MinimalUI)
+ */
+export const XMeta = createConfig({
+  ...ShadcnUI, // <-- ACTIVE THEME: SHADCN UI (B/W)
+  siteName: "DocXes",
   siteUrl: process.env.NEXT_PUBLIC_SITE_URL || "https://docxes.vercel.app",
-  documentsPath: "content/docs",
-  theme: {
-    mdx: {
-      highlighter: "pretty-code",
-      theme: "github-dark",
-      keepBackground: false,
-    },
-    cssVars: {
-      light: {
-        "primary": "oklch(0.21 0.006 285.885)",
-        "primary-foreground": "oklch(0.985 0 0)"
-      },
-      dark: {
-        "primary": "oklch(0.92 0.004 286.32)",
-        "primary-foreground": "oklch(0.21 0.006 285.885)"
-      }
-    }
-  },
-  searchProvider: "local",
-  interface: {
-    components: {
-      button: GButton,
-      pagination: DocPagination,
-      TOC: DocTOC,
-      sidebar: DocSidebar,
-      sidebarHeader: ({ version }: { version: string }) => (
-        <div className="px-6 py-4 border-b">
-          <div className="font-bold text-lg">Docxes</div>
-          <Badge>{version}</Badge>
-        </div>
-      ),
-      sidebarFooter: () => (
-        <div className="px-6 py-4 border-t text-xs text-muted-foreground">
-          © 2026 Lixril. Built with Docxes.
-        </div>
-      ),
-    },
-    styles: {
-      sidebar: {
-        sidebar: "bg-background border-r border-border flex flex-col",
-        toggleBtn: "bg-green-400 rounded-r-full",
-        itemActive: "bg-blue-400"
-      },
-      TOC: {
-        title: "text-xs font-bold uppercase tracking-widest text-primary mb-4",
-      },
-      pagination: {
-        container: "flex items-center justify-between gap-6 pt-10 mt-16 border-t",
-      }
-    },
-  },
-};
+  searchProvider: "flexsearch",
+
+  // DELETE SIDEBAR HEADER (OPTIONAL)
+  sidebar: {
+    ...ShadcnUI.sidebar,
+    header: undefined, 
+  }
+});
+
+export default XMeta;

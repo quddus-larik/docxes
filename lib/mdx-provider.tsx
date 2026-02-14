@@ -9,7 +9,7 @@ interface AppMDXProviderProps {
 
 type HighlighterName = "pretty-code" | "none";
 
-const highlighter = (XMeta.theme.mdx.highlighter ??
+const highlighter = (XMeta.theme?.mdx?.highlighter ??
   "pretty-code") as HighlighterName;
 
 // Build mdxOptions flexibly from config
@@ -21,9 +21,9 @@ const mdxOptions =
             rehypePrettyCode,
             {
               theme:
-                XMeta.theme.mdx.theme ?? "github-light",
+                XMeta.theme?.mdx?.theme ?? "github-light",
               keepBackground:
-                XMeta.theme.mdx.keepBackground ?? true,
+                XMeta.theme?.mdx?.keepBackground ?? true,
               
             },
           ],

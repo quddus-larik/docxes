@@ -1,8 +1,6 @@
 import fs from "fs/promises"
 import path from "path"
 import matter from "gray-matter"
-import { remark } from "remark"
-import remarkHtml from "remark-html"
 import type { DocFile, DocMeta, DocHeading, DocNavItem } from "@/types/types"
 import { XMeta } from "@/x-meta.config"
 
@@ -29,34 +27,16 @@ function extractHeadings(content: string): DocHeading[] {
   let match
 
   while ((match = headingRegex.exec(content)) !== null) {
-    const text = match[1]
+    const text = match[1].trim()
     const id = text
       .toLowerCase()
+      .replace(/[^\w\s-]/g, "")
       .replace(/\s+/g, "-")
-      .replace(/[^\w-]/g, "")
-    const level = match[0].indexOf(" ") // Count # characters
-    headings.push({ level, text, id })
+    const actualLevel = match[0].split(' ')[0].length;
+    headings.push({ level: actualLevel, text, id })
   }
 
   return headings
-}
-
-// Parse markdown file and extract metadata + content
-async function parseDocFile(filePath: string): Promise<Partial<DocFile>> {
-  const fileContent = await fs.readFile(filePath, "utf-8")
-  const { data, content } = matter(fileContent)
-
-  // Convert markdown to HTML
-  const processedContent = await remark().use(remarkHtml).process(content)
-
-  const htmlContent = String(processedContent)
-  const headings = extractHeadings(content)
-
-  return {
-    content: htmlContent,
-    headings,
-    metadata: data as DocMeta,
-  }
 }
 
 // Get all docs for a specific version
@@ -129,18 +109,16 @@ export async function getDoc(version: string, slug: string[]): Promise<DocFile |
   // Read raw content
   const fileContent = await fs.readFile(file, "utf-8")
   const { data, content } = matter(fileContent)
-
-  // Parse for headings if needed
-  const parsed = await parseDocFile(file)
+  const headings = extractHeadings(content)
 
   return {
     slug,
     path: file,
     title: data?.title || slug[slug.length - 1],
     description: data?.description,
-    content: parsed.content || "",      // HTML or serialized if you use remark-html
-    rawContent: content,                // RAW MDX/Markdown for manual serialization
-    headings: parsed.headings || []
+    content: "", // Deprecated, we use rawContent with MDX provider
+    rawContent: content,
+    headings: headings
   }
 }
 
@@ -290,7 +268,11 @@ export async function getVersions(): Promise<string[]> {
       }
   }
   
-  return versions.sort()
+  return versions.sort((a, b) => {
+    const numA = parseInt(a.replace(/\D/g, "") || "0");
+    const numB = parseInt(b.replace(/\D/g, "") || "0");
+    return numA - numB;
+  });
 }
 
 async function hasValidMarkdownFiles(dir: string): Promise<boolean> {

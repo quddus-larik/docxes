@@ -24,13 +24,21 @@ export function ThemeInjector() {
     
     let styleContent = "";
     
-    if (theme.cssVars.light) {
-      styleContent += `:root { ${Object.entries(theme.cssVars.light).map(([k, v]) => `--${k}: ${v};`).join(" ")} }`;
-    }
+    // Default values if not provided
+    const defaultLight = {
+      "primary": "oklch(0.21 0.006 285.885)",
+      "secondary": "oklch(0.70 0.19 338)",
+    };
+    const defaultDark = {
+      "primary": "oklch(0.92 0.004 286.32)",
+      "secondary": "oklch(0.70 0.19 338)",
+    };
+
+    const lightVars = { ...defaultLight, ...theme.cssVars?.light };
+    const darkVars = { ...defaultDark, ...theme.cssVars?.dark };
     
-    if (theme.cssVars.dark) {
-      styleContent += `.dark { ${Object.entries(theme.cssVars.dark).map(([k, v]) => `--${k}: ${v};`).join(" ")} }`;
-    }
+    styleContent += `:root { ${Object.entries(lightVars).map(([k, v]) => `--${k}: ${v};`).join(" ")} }`;
+    styleContent += `.dark { ${Object.entries(darkVars).map(([k, v]) => `--${k}: ${v};`).join(" ")} }`;
 
     if (styleContent) {
       const styleId = "xmeta-theme-styles";

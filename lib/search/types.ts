@@ -17,4 +17,5 @@ export interface SearchProviderInterface {
   name: string;
   initialize(): Promise<void>;
   search(query: string, options?: SearchOptions): Promise<SearchResult[]>;
+  getVersions(): string[];
 }

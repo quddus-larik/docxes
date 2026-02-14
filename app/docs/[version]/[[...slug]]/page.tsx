@@ -2,13 +2,17 @@ import { AppMDXProvider } from "@/lib/mdx-provider";
 import { PageProps } from "@/hooks/useContent";
 import { useContentData } from "@/hooks/useContent";
 
-export default async function DocsPage(props: PageProps) {
-  const { version, slug = [] } = await props.params;
+export default async function DocsPage({ params }: PageProps) {
+  const { version, slug = [] } = await params;
+  const data = await useContentData(version, slug);
+  
   const {
-    doc,
+    doc: meta,
     currentPath,
     prev,
     next,
+    navigation,
+    allVersions,
     SidebarSlot,
     PaginationSlot,
     TOCSlot,
@@ -16,12 +20,16 @@ export default async function DocsPage(props: PageProps) {
     breadcrumbSchema,
     styles,
     components,
-  } = await useContentData(version, slug);
+  } = data;
 
-  const SidebarHeader = components.sidebarHeader;
-  const SidebarFooter = components.sidebarFooter;
-  const TOCHeader = components.TOCHeader;
-  const TOCFooter = components.TOCFooter;
+  const {
+    sidebarHeader: SidebarHeader,
+    sidebarFooter: SidebarFooter,
+    sidebarItem: SidebarItem,
+    TOCHeader,
+    TOCFooter,
+    tocItem: TOCItem,
+  } = components || {};
 
   return (
     <>
@@ -31,42 +39,36 @@ export default async function DocsPage(props: PageProps) {
       )}
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
 
-      <div className="h-svh overflow-hidden">
-        <div className="flex overflow-hidden h-full">
-          <SidebarSlot 
-            currentPath={currentPath} 
-            version={version} 
-            styles={styles.sidebar} 
-            header={SidebarHeader ? <SidebarHeader version={version} /> : null}
-            footer={SidebarFooter ? <SidebarFooter version={version} /> : null}
-          />
+      <div className="flex flex-1">
+        <SidebarSlot 
+          currentPath={currentPath} 
+          version={version} 
+          items={navigation}
+          versions={allVersions}
+          item={SidebarItem}
+          styles={styles?.sidebar} 
+          header={SidebarHeader ? <SidebarHeader version={version} /> : null}
+          footer={SidebarFooter ? <SidebarFooter version={version} /> : null}
+        />
 
-          <div className="flex-1 overflow-auto lg:ml-0">
-            <div className="mx-auto lg:w-full px-4 py-8 lg:px-8 lg:py-12 lg:pr-96">
-              {doc ? (
+        <main className="flex-1 lg:ml-0 min-w-0">
+          <div className="flex items-start">
+            <div className="flex-1 px-4 py-8 lg:px-8 lg:py-12 min-w-0">
+              {meta ? (
                 <>
-                  <article className="prose prose-sm dark:prose-invert max-w-none" id="docs-scroll-container">
-                    <h1 className="text-3xl font-bold mb-2">{doc.title}</h1>
-                    {doc.description && (
-                      <p className="text-muted-foreground text-lg mb-8">{doc.description}</p>
+                  <article className="prose prose-sm dark:prose-invert max-w-none">
+                    <h1 className="text-3xl font-bold mb-2">{meta.title}</h1>
+                    {meta.description && (
+                      <p className="text-muted-foreground text-lg mb-8">{meta.description}</p>
                     )}
-                    <AppMDXProvider  source={doc.rawContent as string} />
+                    <AppMDXProvider source={meta.rawContent as string} />
                   </article>
 
                   {/* Pagination */}
                   <PaginationSlot
-                    prevHref={prev?.href}
-                    prevTitle={prev?.title}
-                    nextHref={next?.href}
-                    nextTitle={next?.title}
-                    styles={styles.pagination}
-                  />
-
-                  <TOCSlot 
-                    headings={doc.headings} 
-                    styles={styles.TOC} 
-                    header={TOCHeader ? <TOCHeader /> : null}
-                    footer={TOCFooter ? <TOCFooter /> : null}
+                    prev={prev}
+                    next={next}
+                    styles={styles?.pagination}
                   />
                 </>
               ) : (
@@ -78,8 +80,21 @@ export default async function DocsPage(props: PageProps) {
                 </div>
               )}
             </div>
+
+            {/* Table of Contents - Sticky Sidebar */}
+            {meta && (
+              <aside className="sticky top-14 hidden xl:block w-64 shrink-0 px-8 py-12 h-[calc(100vh-3.5rem)] overflow-y-auto">
+                <TOCSlot 
+                  headings={meta.headings} 
+                  item={TOCItem}
+                  styles={styles?.TOC} 
+                  header={TOCHeader ? <TOCHeader /> : null}
+                  footer={TOCFooter ? <TOCFooter /> : null}
+                />
+              </aside>
+            )}
           </div>
-        </div>
+        </main>
       </div>
     </>
   );

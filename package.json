@@ -76,6 +76,7 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.3",
     "@tailwindcss/postcss": "^4.1.9",
+    "@types/flexsearch": "^0.7.42",
     "@types/node": "^22",
     "@types/react": "^19",
     "@types/react-dom": "^19",

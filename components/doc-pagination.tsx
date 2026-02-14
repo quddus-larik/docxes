@@ -8,58 +8,51 @@ import { cn } from "@/lib/utils"
 import type { DocPaginationStyles } from "@/types/interface"
 
 interface DocPaginationProps {
-  prevHref?: string
-  prevTitle?: string
-  nextHref?: string
-  nextTitle?: string
-  styles?: DocPaginationStyles
+  prev?: { href: string; title: string } | null;
+  next?: { href: string; title: string } | null;
+  styles?: DocPaginationStyles;
 }
 
 const defaultStyles: DocPaginationStyles = {
-  container: "flex items-center justify-between gap-4 pt-8 mt-12 border-t",
-  button: "flex-1 h-auto py-4 px-6 justify-start gap-4 transition-all hover:bg-muted/50",
-  prevLabel: "text-xs text-muted-foreground font-medium uppercase tracking-wider",
-  nextLabel: "text-xs text-muted-foreground font-medium uppercase tracking-wider",
-  title: "text-base font-semibold",
+  container: "grid grid-cols-1 sm:grid-cols-2 gap-4 pt-10 mt-16 border-t",
+  button: "group flex flex-col gap-2 p-6 rounded-xl border bg-card transition-all hover:bg-accent hover:border-primary/30 no-underline shadow-sm hover:shadow-md",
+  prevLabel: "flex items-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground group-hover:text-primary transition-colors",
+  nextLabel: "flex items-center gap-2 justify-end text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground group-hover:text-primary transition-colors text-right",
+  title: "text-lg font-bold text-foreground transition-colors group-hover:translate-x-1 duration-300",
 };
 
 export function DocPagination({ 
-  prevHref, 
-  prevTitle, 
-  nextHref, 
-  nextTitle,
+  prev, 
+  next,
   styles = {},
 }: DocPaginationProps) {
   const s = { ...defaultStyles, ...styles };
+  
   return (
-    <div className={s.container}>
-      {prevHref ? (
-        <Link href={prevHref} className="flex-1">
-          <Button variant="outline" className={cn(s.button, "justify-start")}>
-            <ArrowLeft className="w-4 h-4" />
-            <div className="text-left">
-              <div className={s.prevLabel}>Previous</div>
-              <div className={s.title}>{prevTitle}</div>
-            </div>
-          </Button>
+    <nav className={s.container} aria-label="Pagination">
+      {prev ? (
+        <Link href={prev.href} className={s.button}>
+          <span className={s.prevLabel}>
+            <ArrowLeft className="w-3 h-3 transition-transform group-hover:-translate-x-1" />
+            Previous
+          </span>
+          <span className={cn(s.title, "group-hover:-translate-x-1")}>{prev.title}</span>
         </Link>
       ) : (
-        <div className="flex-1" />
+        <div className="hidden sm:block" />
       )}
 
-      {nextHref ? (
-        <Link href={nextHref} className="flex-1">
-          <Button variant="outline" className={cn(s.button, "justify-end text-right")}>
-            <div className="text-right">
-              <div className={s.nextLabel}>Next</div>
-              <div className={s.title}>{nextTitle}</div>
-            </div>
-            <ArrowRight className="w-4 h-4" />
-          </Button>
+      {next ? (
+        <Link href={next.href} className={cn(s.button, "text-right items-end")}>
+          <span className={s.nextLabel}>
+            <ArrowRight className="w-3 h-3 transition-transform group-hover:translate-x-1" />
+            Next
+          </span>
+          <span className={s.title}>{next.title}</span>
         </Link>
       ) : (
-        <div className="flex-1" />
+        <div className="hidden sm:block" />
       )}
-    </div>
+    </nav>
   )
 }

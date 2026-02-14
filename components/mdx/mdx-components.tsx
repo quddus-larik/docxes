@@ -12,7 +12,6 @@ import { Badge } from "@/components/ui/badge";
 import { AlertCircle, Info, CheckCircle2, AlertTriangle } from "lucide-react";
 import { CodeBlock } from "./code-block";
 import { MdxTable } from "./mdx-table";
-import { Admonition } from "./admonition";
 import { Step, StepsWithCounter, StepsConnected, CodeStep } from "@/components/mdx/mdx-steps";
 
 function getText(children: React.ReactNode | any): string {
@@ -58,19 +57,17 @@ export const mdxComponents = {
   h5: Heading("h5", "mt-4 text-base font-semibold"),
   h6: Heading("h6", "mt-4 text-sm font-semibold"),
 
-  a: ({ href, children }: any) => {
+  a: ({ href, children, ...props }: any) => {
     const isExternal = href?.startsWith("http");
 
     return (
       <a
         href={href}
-        className="
-          text-black
-          underline
-          underline-offset-4
-          hover:font-semibold
-          transition
-        "
+        className={cn(
+          "font-medium text-primary underline underline-offset-4 decoration-primary/30 transition-all hover:decoration-primary hover:text-primary/80",
+          isExternal && "after:content-['↗'] after:ml-0.5 after:text-[0.8em] after:no-underline"
+        )}
+        {...props}
       >
         {children}
       </a>
@@ -196,8 +193,4 @@ export const mdxComponents = {
   StepsWithCounter,
   StepsConnected,
   CodeStep,
-
-  Important: (props: any) => <Admonition type="important" {...props} />,
-  Note: (props: any) => <Admonition type="note" {...props} />,
-  Tip: (props: any) => <Admonition type="tip" {...props} />,
 };

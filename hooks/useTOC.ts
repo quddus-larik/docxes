@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import type { DocHeading } from "@/types/types";
 
 
@@ -12,34 +12,36 @@ export interface TocItem {
 
 export function useDocTOC(headings: DocHeading[]) {
   const [activeId, setActiveId] = useState("");
+  const observer = useRef<IntersectionObserver | null>(null);
+  const visibleHeadings = useRef<Map<string, boolean>>(new Map());
 
   useEffect(() => {
-    const article = document.getElementById("docs-scroll-container");
-    if (!article) return;
+    const handleIntersections = (entries: IntersectionObserverEntry[]) => {
+      entries.forEach((entry) => {
+        visibleHeadings.current.set(entry.target.id, entry.isIntersecting);
+      });
 
-    let container = article.parentElement;
-    while (container && !container.classList.contains("overflow-auto")) {
-      container = container.parentElement;
-    }
-    if (!container) return;
-
-    const handleScroll = () => {
-      let active = "";
-      const containerRect = container.getBoundingClientRect();
-      for (const h of headings) {
-        const el = document.getElementById(h.id);
-        if (!el) continue;
-        const elRect = el.getBoundingClientRect();
-        if (elRect.top - containerRect.top <= 120) active = h.id;
-        else break;
+      // Find the first visible heading from the top
+      const firstVisible = headings.find((h) => visibleHeadings.current.get(h.id));
+      if (firstVisible) {
+        setActiveId(firstVisible.id);
       }
-      setActiveId(active);
     };
 
-    container.addEventListener("scroll", handleScroll);
-    handleScroll();
+    observer.current = new IntersectionObserver(handleIntersections, {
+      rootMargin: "-80px 0% -80% 0%",
+      threshold: 0,
+    });
 
-    return () => container.removeEventListener("scroll", handleScroll);
+    headings.forEach((heading) => {
+      const el = document.getElementById(heading.id);
+      if (el) observer.current?.observe(el);
+    });
+
+    return () => {
+      observer.current?.disconnect();
+      visibleHeadings.current.clear();
+    };
   }, [headings]);
 
   // Build nested hierarchy
@@ -62,19 +64,13 @@ export function useDocTOC(headings: DocHeading[]) {
 
   // Scroll function
   const scrollToHeading = (id: string) => {
-    const article = document.getElementById("docs-scroll-container");
     const target = document.getElementById(id);
-    if (!article || !target) return;
+    if (!target) return;
 
-    let container = article.parentElement;
-    while (container && !container.classList.contains("overflow-auto")) {
-      container = container.parentElement;
-    }
-    if (!container) return;
-
-    const targetPosition =
-      target.getBoundingClientRect().top - container.getBoundingClientRect().top + container.scrollTop;
-    container.scrollTo({ top: targetPosition - 80, behavior: "smooth" });
+    window.scrollTo({
+      top: target.offsetTop - 80,
+      behavior: "smooth",
+    });
   };
 
   return { activeId, hierarchy, scrollToHeading };

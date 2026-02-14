@@ -9,7 +9,7 @@ export class LocalSearchProvider implements SearchProviderInterface {
 
   async initialize(): Promise<void> {
     try {
-      const response = await fetch("/api/docs/search");
+      const response = await fetch("/api/docs?type=search");
       if (!response.ok) throw new Error("Failed to fetch search index");
       const data = await response.json();
       this.docs = data.docs;

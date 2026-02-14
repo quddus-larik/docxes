@@ -34,7 +34,7 @@ export const CodeBlock: React.FC<PreProps> = ({ className, children, ...props })
       <Button
         size="icon-sm"
         variant="outline"
-        className="absolute top-1 right-1 flex items-center gap-1"
+        className="absolute top-1 right-1 flex items-center gap-1 z-10"
         onClick={handleCopy}
       >
         {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}

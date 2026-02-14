@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -12,7 +13,6 @@ import {
 import { ChevronDown, Menu, X } from "lucide-react";
 import type { DocNavItem } from "@/types/types";
 import { useDocSidebar } from "@/hooks/useSidebar";
-import { SidebarCacheProvider } from "@/lib/sidebar-cache-context";
 import { cn } from "@/lib/utils";
 
 export interface DocSidebarStyles {
@@ -29,6 +29,9 @@ export interface DocSidebarStyles {
 interface DocSidebarProps {
   version: string;
   currentPath: string;
+  items?: DocNavItem[];
+  versions?: string[];
+  item?: React.ComponentType<{ item: DocNavItem; isActive: boolean; depth: number; onClick: () => void }>;
   styles?: DocSidebarStyles;
   header?: React.ReactNode;
   footer?: React.ReactNode;
@@ -36,13 +39,13 @@ interface DocSidebarProps {
 
 const defaultStyles: DocSidebarStyles = {
   sidebar:
-    "bg-background border-r border-border w-72 flex flex-col",
+    "bg-background border-r border-border w-72 flex flex-col shrink-0",
   nav:
-    "flex-1 space-y-1 overflow-y-auto px-3 py-4",
+    "flex-1 space-y-1 px-3 py-4",
   item:
     "flex items-center gap-2 rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground",
   itemActive:
-    "bg-muted text-foreground font-medium",
+    "bg-primary/10 text-primary font-medium",
   sectionTitle:
     "px-3 pt-4 pb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground",
   toggleBtn:
@@ -54,26 +57,34 @@ const defaultStyles: DocSidebarStyles = {
 export function DocSidebar({
   version,
   currentPath,
+  items: initialItems,
+  versions: initialVersions,
+  item: ItemComponent,
   styles = {},
-
   header,
   footer,
 }: DocSidebarProps) {
   const s = { ...defaultStyles, ...styles };
+  const router = useRouter();
 
   const {
     open,
     setOpen,
     expandedItems,
     toggleExpanded,
-    items,
+    items: hookItems,
     loading,
-    versions,
+    versions: hookVersions,
     loadingVersions,
     isActive,
     shouldExpand,
     getItemId,
   } = useDocSidebar(version, currentPath);
+
+  const items = initialItems || hookItems;
+  const versions = initialVersions || hookVersions;
+  const isNavLoading = !initialItems && loading;
+  const isVersionsLoading = !initialVersions && loadingVersions;
 
   const NavItems = ({
     items,
@@ -82,7 +93,7 @@ export function DocSidebar({
     items: DocNavItem[];
     depth?: number;
   }) => (
-    <ul className="space-y-1">
+    <ul className="flex flex-col gap-1 list-none p-0 m-0">
       {items.map((item) => {
         const expanded =
           expandedItems.has(getItemId(item)) || shouldExpand(item);
@@ -94,16 +105,30 @@ export function DocSidebar({
         );
 
         const paddingLeft = {
-          paddingLeft: depth * 12 + 12,
+          paddingLeft: `${depth * 12 + 12}px`,
         };
 
+        const active = isActive(item.href);
+        const onClick = () => setOpen(false);
+
+        if (ItemComponent) {
+          return (
+            <li key={getItemId(item)} className="list-none">
+              <ItemComponent item={item} isActive={active} depth={depth} onClick={onClick} />
+              {hasChildren && expanded && (
+                <NavItems items={item.items!} depth={depth + 1} />
+              )}
+            </li>
+          );
+        }
+
         return (
-          <li key={getItemId(item)}>
+          <li key={getItemId(item)} className="list-none">
             {/* File */}
             {!hasChildren && item.href && (
               <Link
                 href={item.href}
-                onClick={() => setOpen(false)}
+                onClick={onClick}
                 className={baseItem}
                 style={paddingLeft}
               >
@@ -113,47 +138,48 @@ export function DocSidebar({
 
             {/* Folder */}
             {hasChildren && (
-              <div className="flex items-center">
-                {item.href ? (
-                  <Link
-                    href={item.href}
-                    onClick={() => setOpen(false)}
-                    className={cn(baseItem, "flex-1")}
-                    style={paddingLeft}
-                  >
-                    {item.title}
-                  </Link>
-                ) : (
+              <div className="flex flex-col">
+                <div className="flex items-center">
+                  {item.href ? (
+                    <Link
+                      href={item.href}
+                      onClick={() => setOpen(false)}
+                      className={cn(baseItem, "flex-1")}
+                      style={paddingLeft}
+                    >
+                      {item.title}
+                    </Link>
+                  ) : (
+                    <button
+                      onClick={() => toggleExpanded(getItemId(item))}
+                      className={cn(baseItem, "flex-1 text-left")}
+                      style={paddingLeft}
+                    >
+                      {item.title}
+                    </button>
+                  )}
                   <button
                     onClick={() => toggleExpanded(getItemId(item))}
-                    className={cn(baseItem, "flex-1 text-left")}
-                    style={paddingLeft}
-                  >
-                    {item.title}
-                  </button>
-                )}
-                <button
-                  onClick={() => toggleExpanded(getItemId(item))}
-                  className={cn(
-                    "p-2 rounded transition-colors",
-                    s.toggleBtn
-                  )}
-                >
-                  <ChevronDown
                     className={cn(
-                      "w-4 h-4 transition-transform",
-                      expanded && "rotate-180"
+                      "p-2 rounded transition-colors bg-transparent border-0 cursor-pointer",
+                      s.toggleBtn
                     )}
+                  >
+                    <ChevronDown
+                      className={cn(
+                        "w-4 h-4 transition-transform",
+                        expanded && "rotate-180"
+                      )}
+                    />
+                  </button>
+                </div>
+                {expanded && (
+                  <NavItems
+                    items={item.items!}
+                    depth={depth + 1}
                   />
-                </button>
+                )}
               </div>
-            )}
-
-            {hasChildren && expanded && (
-              <NavItems
-                items={item.items!}
-                depth={depth + 1}
-              />
             )}
           </li>
         );
@@ -162,21 +188,20 @@ export function DocSidebar({
   );
 
   return (
-    <SidebarCacheProvider>
-      {/* Mobile toggle */}
-      <Button
-        variant="ghost"
-        size="icon"
-        className="fixed top-4 left-4 z-40 lg:hidden"
+    <>
+      {/* Mobile toggle - Pure Tailwind/HTML */}
+      <button
+        className="fixed top-4 left-4 z-40 lg:hidden p-2 bg-background border rounded-md shadow-sm"
         onClick={() => setOpen(!open)}
+        aria-label="Toggle Menu"
       >
-        {open ? <X /> : <Menu />}
-      </Button>
+        {open ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+      </button>
 
       {/* Sidebar */}
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-30 transition-transform duration-200 lg:relative lg:translate-x-0 h-full",
+          "fixed inset-y-0 left-0 z-30 transition-transform duration-200 lg:sticky lg:top-14 lg:self-start lg:translate-x-0 h-[calc(100vh-3.5rem)]",
           s.sidebar,
           open ? "translate-x-0" : "-translate-x-full"
         )}
@@ -184,38 +209,30 @@ export function DocSidebar({
         {header}
         
         <div className="flex-1 overflow-y-auto px-3 pt-16 lg:pt-4">
-          <nav className={s.nav}>
-            {loadingVersions ? (
-              <div className={s.sectionTitle}>
-                Loading…
-              </div>
+          <nav className={cn("flex flex-col gap-4", s.nav)}>
+            {isVersionsLoading ? (
+              <div className={s.sectionTitle}>Loading versions…</div>
             ) : versions.length > 1 ? (
-              <Select
-                value={version}
-                onValueChange={(v) =>
-                  (window.location.href = `/docs/${v}`)
-                }
-              >
-                <SelectTrigger className="mb-3 h-9 w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
+              <div className="px-3">
+                <select 
+                  value={version}
+                  onChange={(e) => router.push(`/docs/${e.target.value}`)}
+                  className="w-full p-2 rounded-md border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                >
                   {versions.map((v) => (
-                    <SelectItem key={v} value={v}>
+                    <option key={v} value={v}>
                       {v.toUpperCase()}
-                    </SelectItem>
+                    </option>
                   ))}
-                </SelectContent>
-              </Select>
-            ) : (
-              <div className={s.sectionTitle}>
-                {version.toUpperCase()}
+                </select>
               </div>
+            ) : (
+              <div className={s.sectionTitle}>{version.toUpperCase()}</div>
             )}
 
-            {loading ? (
-              <div className="px-3 py-2 text-xs text-muted-foreground">
-                Loading…
+            {isNavLoading ? (
+              <div className="px-3 py-2 text-xs text-muted-foreground italic">
+                Loading navigation…
               </div>
             ) : (
               <NavItems items={items} />
@@ -230,12 +247,12 @@ export function DocSidebar({
       {open && (
         <div
           className={cn(
-            "fixed inset-0 z-20 lg:hidden",
+            "fixed inset-0 z-20 lg:hidden bg-black/40 backdrop-blur-sm",
             s.overlay
           )}
           onClick={() => setOpen(false)}
         />
       )}
-    </SidebarCacheProvider>
+    </>
   );
 }

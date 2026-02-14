@@ -39,7 +39,7 @@ export function SidebarCacheProvider({ children }: { children: ReactNode }) {
     }
 
     try {
-      const res = await fetch(`/api/docs/structure?version=${version}`);
+      const res = await fetch(`/api/docs?type=structure&version=${version}`);
       const data = await res.json();
       const nav = data.nav || [];
       navCacheRef.current.set(version, nav);

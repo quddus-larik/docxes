@@ -54,42 +54,38 @@ export function SearchDialog() {
         </kbd>
       </button>
 
-      <CommandDialog open={open} onOpenChange={setOpen}>
+      <CommandDialog open={open} onOpenChange={setOpen} shouldFilter={false}>
         <CommandInput placeholder="Search documentation..." />
-        <CommandList>
-          {versions.length > 1 && (
-            <div className="border-b px-2 py-2">
-              <div className="text-xs font-semibold text-muted-foreground mb-2">Version:</div>
-              <div className="flex flex-wrap gap-2">
+        {versions.length > 1 && (
+          <div className="border-b px-2 py-2">
+            <div className="text-xs font-semibold text-muted-foreground mb-2">Version:</div>
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={() => setSelectedVersion("all")}
+                className={`px-2 py-1 rounded text-sm ${selectedVersion === "all" ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground hover:bg-secondary/80"}`}
+              >
+                All
+              </button>
+              {versions.map((version) => (
                 <button
-                  onClick={() => setSelectedVersion("all")}
-                  className={`px-2 py-1 rounded text-sm ${selectedVersion === "all" ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground hover:bg-secondary/80"}`}
+                  key={version}
+                  onClick={() => setSelectedVersion(version)}
+                  className={`px-2 py-1 rounded text-sm ${selectedVersion === version ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground hover:bg-secondary/80"}`}
                 >
-                  All
+                  {version}
                 </button>
-                {versions.map((version) => (
-                  <button
-                    key={version}
-                    onClick={() => setSelectedVersion(version)}
-                    className={`px-2 py-1 rounded text-sm ${selectedVersion === version ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground hover:bg-secondary/80"}`}
-                  >
-                    {version}
-                  </button>
-                ))}
-              </div>
+              ))}
             </div>
-          )}
+          </div>
+        )}
 
-          <Command shouldFilter={false}>
-            <CommandList className="max-h-75 my-2">
-              <CommandEmpty>No results found.</CommandEmpty>
-              <SearchResults
-                search={search}
-                onNavigate={handleSelect}
-                selectedVersion={selectedVersion}
-              />
-            </CommandList>
-          </Command>
+        <CommandList className="max-h-[450px]">
+          <CommandEmpty>No results found.</CommandEmpty>
+          <SearchResults
+            search={search}
+            onNavigate={handleSelect}
+            selectedVersion={selectedVersion}
+          />
         </CommandList>
       </CommandDialog>
     </>
@@ -150,7 +146,7 @@ function SearchResults({
           key={result.id}
           value={result.title}
           onSelect={() => onNavigate(result.href)}
-          className="cursor-pointer"
+          className="cursor-pointer overflow-hidden"
         >
           <div className="flex-1">
             <div className="font-medium text-sm">{result.title}</div>
