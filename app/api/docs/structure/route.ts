@@ -1,5 +1,5 @@
 import { generateNavigation } from "@/lib/docs"
-import { NextResponse } from "next/server"
+import { successResponse, errorResponse } from "@/lib/api-response"
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
@@ -7,9 +7,9 @@ export async function GET(request: Request) {
 
   try {
     const nav = await generateNavigation(version)
-    return NextResponse.json({ nav, version })
+    return successResponse({ nav, version })
   } catch (error) {
-    console.error("Error generating navigation:", error)
-    return NextResponse.json({ nav: [], version, error: "Failed to generate navigation" }, { status: 500 })
+    console.error("[STRUCTURE_API_ERROR]:", error)
+    return errorResponse("Failed to generate navigation")
   }
 }

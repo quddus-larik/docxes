@@ -1,18 +1,12 @@
 import { indexAllDocs } from "@/lib/search-index"
+import { successResponse, errorResponse } from "@/lib/api-response"
 
-export async function GET(request: Request) {
+export async function GET() {
   try {
     const docs = await indexAllDocs()
-    return Response.json(
-      { docs },
-      {
-        headers: {
-          "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=86400",
-        },
-      },
-    )
+    return successResponse({ docs })
   } catch (error) {
-    console.error("Search indexing error:", error)
-    return Response.json({ error: "Failed to index documents" }, { status: 500 })
+    console.error("[SEARCH_API_ERROR]:", error)
+    return errorResponse("Failed to index documents")
   }
 }
