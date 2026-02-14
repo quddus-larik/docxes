@@ -37,7 +37,7 @@ export const MinimalUI: Partial<XMetaConfig> = {
 
   toc: {
     styles: {
-      container: "sticky top-24 w-full",
+      container: "w-full",
       title: "text-[10px] font-bold uppercase tracking-[0.3em] text-muted-foreground/30 mb-8",
       item: "px-0 py-1.5 text-xs text-muted-foreground hover:text-primary transition-colors",
       itemActive: "text-primary font-medium",

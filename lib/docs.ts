@@ -27,13 +27,11 @@ function extractHeadings(content: string): DocHeading[] {
   let match
 
   while ((match = headingRegex.exec(content)) !== null) {
-    const text = match[1]
+    const text = match[1].trim()
     const id = text
       .toLowerCase()
+      .replace(/[^\w\s-]/g, "")
       .replace(/\s+/g, "-")
-      .replace(/[^\w-]/g, "")
-    const level = match[0].trim().indexOf(" ") === -1 ? match[0].trim().length : match[0].trim().indexOf(" "); 
-    // Actually the level is simpler: count #
     const actualLevel = match[0].split(' ')[0].length;
     headings.push({ level: actualLevel, text, id })
   }

@@ -57,7 +57,7 @@ export const CurvedUI: Partial<XMetaConfig> = {
 
   toc: {
     styles: {
-      container: "sticky top-24 w-full p-6 rounded-[2rem] bg-secondary/30 backdrop-blur-sm border border-border/50",
+      container: "w-full p-6 rounded-[2rem] bg-secondary/30 backdrop-blur-sm border border-border/50",
       title: "text-[11px] font-black uppercase tracking-[0.2em] text-primary mb-6 flex items-center gap-2 before:content-[''] before:w-1.5 before:h-1.5 before:bg-primary before:rounded-full",
       item: "rounded-full px-4 py-2 text-[13px] font-medium transition-all duration-200 text-muted-foreground hover:text-primary hover:bg-primary/5",
       itemActive: "bg-primary/10 text-primary font-bold pl-5",

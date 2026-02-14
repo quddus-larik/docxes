@@ -16,7 +16,7 @@ interface DocTOCProps {
 }
 
 const defaultStyles: DocTOCStyles = {
-  container: "sticky top-20 w-full",
+  container: "w-full",
   nav: "space-y-2",
   title: "text-xs font-semibold uppercase tracking-wider text-foreground/60 mb-4",
   item: "block w-full rounded px-3 py-1 text-left text-sm transition-colors text-foreground/60 hover:text-foreground",
@@ -72,13 +72,13 @@ export function DocTOC({
   );
 
   return (
-    <aside className={cn("overflow-y-auto", s.container)}>
+    <div className={s.container}>
       {header}
       <nav className={cn("flex flex-col", s.nav)}>
         <h3 className={cn("m-0", s.title)}>On This Page</h3>
         {renderItems(hierarchy)}
       </nav>
       {footer}
-    </aside>
+    </div>
   );
 }

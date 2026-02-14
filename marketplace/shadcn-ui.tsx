@@ -45,7 +45,7 @@ export const ShadcnUI: Partial<XMetaConfig> = {
 
   toc: {
     styles: {
-      container: "sticky top-24 w-full",
+      container: "w-full",
       title: "text-sm font-bold tracking-tight mb-4",
       item: "text-xs py-1 text-muted-foreground hover:text-foreground transition-colors",
       itemActive: "text-foreground font-semibold",
