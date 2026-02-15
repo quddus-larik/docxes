@@ -5,7 +5,7 @@ keywords: ["usage", "guide", "setup", "configuration", "docx"]
 order: 2
 ---
 
-# Getting Started with DocX
+# DocX
 
 DocX is a production-ready, file-system driven documentation framework built on Next.js 16. It offers a "Formula-like" customization experience, allowing you to completely tailor the look and feel without fighting the framework.
 
@@ -14,7 +14,7 @@ DocX is a production-ready, file-system driven documentation framework built on 
 Since DocX is a Next.js template, you typically start by cloning the repository or using a starter.
 
 ```bash
-git clone https://github.com/your-username/docxes.git my-docs
+git clone https://github.com/quddus-larik/docxes.git my-docs
 cd my-docs
 pnpm install
 ```
@@ -27,35 +27,74 @@ pnpm install
 
 ## Configuration
 
-The heart of DocX is `x-meta.config.ts`. Here you can define your site's identity, enable features, and inject custom components.
+The heart of DocXes is `x-meta.config.ts`. Here you can define your site's identity, enable features, and inject custom components.
 
 ```typescript
-// x-meta.config.ts
-export const XMeta = {
-  siteName: "My Docs",
-  description: "Best docs ever",
-  siteUrl: "https://mydocs.com",
+// x-meta.config.tsx
+
+export const XMeta = createConfig({
+  ...ShadcnUI, 
+  siteName: "DocXes",
+  siteUrl: process.env.NEXT_PUBLIC_SITE_URL || "https://docxes.vercel.app",
+  searchProvider: "flexsearch",
+  theme:{
+    mdx:{
+      highlighter: "pretty-code",
+      keepBackground: false
+    }
+  },
+  sidebar: {
+    ...ShadcnUI.sidebar,
+  },
+  header: Header
+});
+
+export default XMeta;
+
+
+```
+
+
+### API Reference
+```typescript
+// @/lib/configuration.tsx
+const defaults: XMetaConfig = {
+  siteName: "DocXes",
+  description: "A dynamic documentation generator framework",
+  siteUrl: "https://docxes.vercel.app/",
   documentsPath: "content/docs",
+  searchProvider: "local",
   theme: {
     mdx: {
       highlighter: "pretty-code",
-      theme: "github-light",
+      theme: "github-dark",
+      keepBackground: false,
     },
-    // Headless Tailwind Customization
-    cssVars: {
-      root: { "radius": "0.5rem" },
-      light: { "primary": "oklch(0.488 0.243 264.376)" },
-      dark: { "primary": "oklch(0.985 0 0)" }
-    }
+    cssVars: {  // [keys]: [hex | rgb() | etc]
+       light: "", 
+       dark: "",
+       root: ""
+     }
   },
-  // Plug your own components
-  interface: {
-    components: {
-      sidebarHeader: MyLogoComponent,
-      sidebarFooter: MyCopyrightComponent,
-      // ...
-    }
-  }
+  header: Header,
+  modeToggle: ModeToggle,
+  sidebar: { component: DocSidebar, styles: {} },
+  toc: { component: DocTOC, styles: {} },
+  pagination: { component: DocPagination, styles: {} },
+  versions: { default: "v1" }
+};
+
+
+export const createConfig = (overrides: Partial<XMetaConfig> = {}): XMetaConfig => {
+  return {
+    ...defaults,
+    ...overrides,
+    theme: { ...defaults.theme, ...overrides.theme },
+    sidebar: { ...defaults.sidebar, ...overrides.sidebar },
+    toc: { ...defaults.toc, ...overrides.toc },
+    pagination: { ...defaults.pagination, ...overrides.pagination },
+    versions: { ...defaults.versions, ...overrides.versions },
+  };
 };
 ```
 
@@ -89,9 +128,25 @@ Folders created in `content/docs/v1` automatically become sections in the sideba
 
 DocX uses a "headless" Tailwind approach. You don't need to edit CSS files to change the primary color or border radius. Just update `theme.cssVars` in the config.
 
+```typescript
+// x-meta.config.tsx
+cosnt XMeta = createConfig({
+  ...XMeta(any),
+  theme:{
+    cssVars:{
+      light: "",
+      dark: "",
+      root: ""
+    }
+  }
+})
+
+```
+
+
 ### Search
 
-By default, DocX uses a local Fuse.js search provider. You can switch to other providers (like Algolia) by implementing the `SearchProviderInterface` and updating the config.
+By default, DocXes uses a local `Fuse.js` search provider. You can switch to other providers (like Flexsearch) by implementing the ` searchProvider: "flexsearch" ` in `x-meta.config.tsx`.
 
 ### Component Slots
 

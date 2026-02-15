@@ -1,12 +1,9 @@
 ---
-title: Development Guide
-description: Learn how to build and structure your documentation with DocXes.
+title: Development guidelines
+description: It is designed to make documentation development seamless and intuitive. It uses a file-based routing system and supports MDX for rich content.
+keywords: ["guide","learn","configuration"]
 order: 2
 ---
-
-# Development Guide
-
-DocXes is designed to make documentation development seamless and intuitive. It uses a file-based routing system and supports MDX for rich content.
 
 ## Directory Structure
 
@@ -33,6 +30,7 @@ Each page should include frontmatter at the top:
 ---
 title: My New Page
 description: A brief description of what this page covers.
+keywords: ["guide","learn", "configuration","etc"]
 order: 5
 ---
 ```
@@ -40,6 +38,7 @@ order: 5
 - **title**: The display title of the page.
 - **description**: Used for SEO and page headers.
 - **order**: Controls the position in the sidebar navigation.
+- **keywords**: Used for Searching by keywords have data-type of Array with strings elements.
 
 ## Navigation & Hierarchy
 
@@ -47,6 +46,14 @@ DocXes automatically generates the sidebar based on your file structure.
 - **Files**: Become individual links.
 - **Folders**: Become expandable sections.
 - **main.mdx**: If a folder contains a `main.mdx`, the folder name itself becomes a clickable link.
+
+## Hide files and folder
+
+Some consumers need to hide files but, for later edit or recovery then what shoud the do because there is no any js object based sidebar content.
+
+We Provide a File Naming hide techs that give tha full control over visiblity on content documentations.
+- **Files**: Rename File from `code.mdx` to `code.hidden.mdx`
+- **Folder**: Rename `foldername` from `foldername.hidden.mdx`
 
 ## Customization Guardrails
 
@@ -62,6 +69,6 @@ These are the files you *should* modify to customize your documentation site:
 ### ⚠️ Warning: Core Files
 Avoid editing these unless you are confident in extending the framework:
 - `app/`: Contains the routing and layout logic.
-- `lib/`: Core utilities for document parsing and API responses.
+- `lib/`: Core utilities for document parsing and API responses (It has no core NPM packages).
 - `hooks/`: Framework state management (sidebar, TOC, search).
-- `components/ui/`: Standard UI primitives.
+- `components/ui/`: Standard UI primitives (ShadnCN UI).
