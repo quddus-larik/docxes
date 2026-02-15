@@ -3,7 +3,6 @@
 import React from "react";
 import { cn } from "@/lib/utils";
 
-
 const StepContext = React.createContext<number | null>(null);
 
 
@@ -23,37 +22,31 @@ interface CodeStepProps {
   className?: string;
 }
 
-
 function StepLayout({
   number,
   children,
-  connected,
 }: {
   number: number;
   children: React.ReactNode;
-  connected?: boolean;
 }) {
   return (
-    <div className="group relative flex gap-4">
+    <div className="relative flex items-start gap-4">
       {/* Badge */}
-      <div className="relative z-10 shrink-0">
+      <div className="relative z-10 shrink-0 mt-1">
         <div
           className={cn(
-            "flex h-9 w-9 items-center justify-center rounded-full text-sm font-semibold",
+            "flex h-9 min-w-9 px-3 items-center justify-center",
+            "rounded-lg text-sm font-semibold",
             "bg-primary text-primary-foreground",
-            "ring-4 ring-background",
-            "transition-transform group-hover:scale-105"
+            "border border-border/50"
           )}
         >
           {number}
         </div>
       </div>
 
-      {/* Content */}
-      <div className="flex-1">
-        <div className="prose prose-sm dark:prose-invert max-w-none">
-          {children}
-        </div>
+      <div className="flex-1 [&>*:first-child]:mt-0">
+        {children}
       </div>
     </div>
   );
@@ -62,7 +55,6 @@ function StepLayout({
 
 export function Step({ children, className }: StepItemProps) {
   const stepNumber = React.useContext(StepContext);
-
   if (stepNumber === null) return null;
 
   return (
@@ -77,7 +69,7 @@ export function StepsWithCounter({ children, className }: StepsProps) {
   const items = React.Children.toArray(children);
 
   return (
-    <div className={cn("my-8 space-y-6", className)}>
+    <div className={cn("my-2", className)}>
       {items.map((child, index) => (
         <StepContext.Provider key={`step-${index}`} value={index + 1}>
           {child}
@@ -96,9 +88,9 @@ export function StepsConnected({ children, className }: StepsProps) {
       {items.map((child, index) => (
         <StepContext.Provider key={`step-${index}`} value={index + 1}>
           <div className="relative">
-            {/* Vertical line */}
+            {/* Vertical connector line aligned to curved badge */}
             {index < items.length - 1 && (
-              <div className="absolute left-4.5 top-10 h-full w-px bg-border border-l-2" />
+              <div className="absolute left-[18px] top-10 h-full w-px bg-border" />
             )}
 
             <StepLayout number={index + 1}>{child}</StepLayout>
@@ -113,6 +105,7 @@ export function StepsConnected({ children, className }: StepsProps) {
 export function CodeStep({ children, lines, className }: CodeStepProps) {
   const highlightedLines = React.useMemo(() => {
     if (!lines) return [];
+
     const out: number[] = [];
 
     for (const part of lines.split(",")) {
@@ -123,6 +116,7 @@ export function CodeStep({ children, lines, className }: CodeStepProps) {
         out.push(Number(part));
       }
     }
+
     return out;
   }, [lines]);
 
@@ -130,7 +124,6 @@ export function CodeStep({ children, lines, className }: CodeStepProps) {
     <div
       className={cn(
         "rounded-lg border bg-muted/30 p-3",
-        "transition-colors hover:bg-muted/40",
         className
       )}
     >

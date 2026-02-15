@@ -189,47 +189,18 @@ export function DocSidebar({
 
   return (
     <>
-      {/* Mobile toggle - Pure Tailwind/HTML */}
-      <button
-        className="fixed top-4 left-4 z-40 lg:hidden p-2 bg-background border rounded-md shadow-sm"
-        onClick={() => setOpen(!open)}
-        aria-label="Toggle Menu"
-      >
-        {open ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-      </button>
-
       {/* Sidebar */}
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-30 transition-transform duration-200 lg:sticky lg:top-14 lg:self-start lg:translate-x-0 h-[calc(100vh-3.5rem)]",
+          "fixed inset-y-0 left-0 z-10 transition-transform duration-200 lg:sticky lg:top-14 lg:self-start lg:translate-x-0 h-full lg:min-h-[calc(100vh-3.5rem)]",
           s.sidebar,
           open ? "translate-x-0" : "-translate-x-full"
         )}
       >
         {header}
         
-        <div className="flex-1 overflow-y-auto px-3 pt-16 lg:pt-4">
+        <div className="flex-1 overflow-y-auto px-3 py-4">
           <nav className={cn("flex flex-col gap-4", s.nav)}>
-            {isVersionsLoading ? (
-              <div className={s.sectionTitle}>Loading versions…</div>
-            ) : versions.length > 1 ? (
-              <div className="px-3">
-                <select 
-                  value={version}
-                  onChange={(e) => router.push(`/docs/${e.target.value}`)}
-                  className="w-full p-2 rounded-md border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                >
-                  {versions.map((v) => (
-                    <option key={v} value={v}>
-                      {v.toUpperCase()}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            ) : (
-              <div className={s.sectionTitle}>{version.toUpperCase()}</div>
-            )}
-
             {isNavLoading ? (
               <div className="px-3 py-2 text-xs text-muted-foreground italic">
                 Loading navigation…

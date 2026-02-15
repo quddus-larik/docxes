@@ -47,11 +47,17 @@ async function walkDir(dir: string, version: string, slug: string[] = []): Promi
           // Extract plain text from content
           const plainContent = extractPlainText(content)
 
+          // Normalize keywords
+          let keywords = data.keywords || []
+          if (typeof keywords === "string") {
+            keywords = keywords.split(",").map((k: string) => k.trim())
+          }
+
           docs.push({
             id: `${version}-${[...slug, fileSlug].join("/")}`,
             title: data.title || fileSlug.replace(/-/g, " "),
             description: data.description,
-            keywords: data.keywords || [],
+            keywords: keywords,
             content: plainContent,
             version,
             href: `/docs/${version}/${[...slug, fileSlug].join("/")}`,

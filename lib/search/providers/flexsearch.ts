@@ -18,10 +18,34 @@ export class FlexSearchProvider implements SearchProviderInterface {
       this.index = new (FlexSearch as any).Document({
         document: {
           id: "id",
-          index: ["title", "description", "keywords", "content"],
+          index: [
+            {
+              field: "title",
+              tokenize: "forward",
+              optimize: true,
+              resolution: 9,
+            },
+            {
+              field: "keywords",
+              tokenize: "forward",
+              optimize: true,
+              resolution: 9,
+            },
+            {
+              field: "description",
+              tokenize: "forward",
+              optimize: true,
+              resolution: 5,
+            },
+            {
+              field: "content",
+              tokenize: "lazy",
+              optimize: true,
+              resolution: 1,
+            },
+          ],
           store: true,
         },
-        tokenize: "forward",
         context: true,
       });
 

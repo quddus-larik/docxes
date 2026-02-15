@@ -4,9 +4,12 @@ import { XMetaConfig, HeaderProps } from "@/types/interface";
 import { cn } from "@/lib/utils";
 import { SearchDialog } from "@/components/search-dialog";
 import { ModeToggle } from "@/components/mode-toggle";
+import { Menu } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useSidebar } from "@/components/sidebar-context";
 
 /**
- * Shadcn UI Customization for DocX
+ * Shadcn UI Customization for DocXes
  * A classic, high-contrast black and white aesthetic with clean borders
  * and a professional feel.
  */
@@ -15,19 +18,35 @@ export const ShadcnUI: Partial<XMetaConfig> = {
   theme: {
     cssVars: {
       light: {
-        "primary": "0 0% 9%",
-        "primary-foreground": "0 0% 98%",
-        "secondary": "0 0% 96.1%",
-        "secondary-foreground": "0 0% 9%",
-        "border": "0 0% 89.8%",
+        "background": "oklch(1 0 0)",
+        "foreground": "oklch(0.145 0 0)",
+        "primary": "oklch(0.205 0 0)",
+        "primary-foreground": "oklch(0.985 0 0)",
+        "secondary": "oklch(0.96 0 0)",
+        "secondary-foreground": "oklch(0.205 0 0)",
+        "muted": "oklch(0.96 0 0)",
+        "muted-foreground": "oklch(0.55 0 0)",
+        "accent": "oklch(0.96 0 0)",
+        "accent-foreground": "oklch(0.205 0 0)",
+        "border": "oklch(0.92 0 0)",
+        "input": "oklch(0.92 0 0)",
+        "ring": "oklch(0.7 0 0)",
         "radius": "0.5rem",
       },
       dark: {
-        "primary": "0 0% 98%",
-        "primary-foreground": "0 0% 9%",
-        "secondary": "0 0% 14.9%",
-        "secondary-foreground": "0 0% 98%",
-        "border": "0 0% 14.9%",
+        "background": "oklch(0.145 0 0)", 
+        "foreground": "oklch(0.985 0 0)",
+        "primary": "oklch(0.985 0 0)",
+        "primary-foreground": "oklch(0.205 0 0)",
+        "secondary": "oklch(0.25 0 0)",
+        "secondary-foreground": "oklch(0.985 0 0)",
+        "muted": "oklch(0.25 0 0)",
+        "muted-foreground": "oklch(0.7 0 0)",
+        "accent": "oklch(0.25 0 0)",
+        "accent-foreground": "oklch(0.985 0 0)",
+        "border": "oklch(0.25 0 0)",
+        "input": "oklch(0.25 0 0)",
+        "ring": "oklch(0.55 0 0)",
         "radius": "0.5rem",
       }
     }
@@ -35,8 +54,8 @@ export const ShadcnUI: Partial<XMetaConfig> = {
 
   sidebar: {
     styles: {
-      sidebar: "bg-background border-r w-64 shrink-0",
-      nav: "px-4 py-6 space-y-1",
+      sidebar: "bg-background border-r border-border w-64 shrink-0 z-30",
+      nav: "px-1 py-3 space-y-1",
       item: "flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground",
       itemActive: "bg-accent text-accent-foreground border",
       sectionTitle: "px-3 mt-4 mb-2 text-[11px] font-bold uppercase tracking-wider text-muted-foreground/50",
@@ -62,24 +81,37 @@ export const ShadcnUI: Partial<XMetaConfig> = {
     }
   },
 
-  header: ({ siteName }: HeaderProps) => (
-    <header className="sticky top-0 px-2 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-14 items-center justify-between">
-        <div className="flex items-center gap-6">
-          <Link href="/" className="font-bold text-lg tracking-tight hover:opacity-80 transition-opacity">
-            {siteName}
-          </Link>
-          <nav className="hidden md:flex items-center gap-4">
-            <Link href="/docs" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Docs</Link>
+  header: ({ siteName }: HeaderProps) => {
+    const { toggle } = useSidebar();
+    return (
+      <header className="sticky top-0 px-2 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="container flex h-14 items-center justify-between">
+          <div className="flex items-center gap-6">
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="lg:hidden h-8 w-8"
+                onClick={toggle}
+              >
+                <Menu className="h-4 w-4" />
+              </Button>
+              <Link href="/" className="font-bold text-lg tracking-tight hover:opacity-80 transition-opacity">
+                {siteName}
+              </Link>
+            </div>
+            <nav className="hidden md:flex items-center gap-4">
+              <Link href="/docs" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Docs</Link>
             </nav>
+          </div>
+          <div className="flex items-center gap-3">
+            <SearchDialog />
+            <ModeToggle />
+          </div>
         </div>
-        <div className="flex items-center gap-3">
-          <SearchDialog />
-          <ModeToggle />
-        </div>
-      </div>
-    </header>
-  )
+      </header>
+    )
+  }
 };
 
 export default ShadcnUI;

@@ -1,5 +1,7 @@
 import { ShadcnUI } from "@/marketplace/shadcn-ui";
 import { createConfig } from "@/lib/configuration";
+import { Header } from "./components/header";
+
 
 /**
  * 💡 TIP FOR DEVELOPERS:
@@ -17,10 +19,16 @@ export const XMeta = createConfig({
   siteName: "DocXes",
   siteUrl: process.env.NEXT_PUBLIC_SITE_URL || "https://docxes.vercel.app",
   searchProvider: "flexsearch",
-
+  theme:{
+    mdx:{
+      highlighter: "pretty-code",
+      keepBackground: false
+    }
+  },
   sidebar: {
     ...ShadcnUI.sidebar,
   },
+  header: Header
 });
 
 export default XMeta;

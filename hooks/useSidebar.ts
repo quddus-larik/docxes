@@ -4,9 +4,11 @@ import { useState, useEffect, useRef } from "react";
 import type { DocNavItem } from "@/types/types";
 import { useSidebarCache } from "@/lib/sidebar-cache-context";
 
+import { useSidebar } from "@/components/sidebar-context";
+
 export function useDocSidebar(version: string, currentPath: string) {
   const { fetchVersions, fetchNavigation } = useSidebarCache();
-  const [open, setOpen] = useState(false);
+  const { open, setOpen } = useSidebar();
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
   const [items, setItems] = useState<DocNavItem[]>([]);
   const [loading, setLoading] = useState(true);

@@ -1,0 +1,66 @@
+---
+title: Search Engine
+description: Deep dive into the search abstraction and provider system.
+order: 3
+---
+
+
+DocXes features a pluggable search architecture. By default, it ships with a high-performance local search engine powered by **FlexSearch**, but it can be extended to support any provider.
+
+## The Search Provider Interface
+
+All search logic is abstracted behind a TypeScript interface. This means the UI component (`SearchDialog`) never talks directly to an engine; it talks to the provider.
+
+```typescript
+interface SearchProviderInterface {
+  name: string;
+  initialize(): Promise<void>;
+  search(query: string, options?: SearchOptions): Promise<SearchResult[]>;
+  getVersions(): string[];
+}
+```
+
+## Built-in Providers
+
+### FlexSearch (Default)
+
+The `FlexSearchProvider` is the recommended engine for most documentation sites.
+- **Contextual**: It indexes titles, descriptions, keywords, and content content.
+- **Memory Efficient**: Uses a memory-optimized index structure.
+- **Fast**: Sub-millisecond query times for thousands of documents.
+
+### Local (Fuse.js)
+
+A simpler alternative based on Fuse.js. Useful for very small sites where fuzzy matching is the priority over performance.
+
+## Configuring Search
+
+You can switch providers in `x-meta.config.tsx`:
+
+```tsx
+export const XMeta = createConfig({
+  // ...
+  searchProvider: "flexsearch", // or "local"
+});
+```
+
+## Search Indexing
+
+The indexing process happens at build time (and request time in dev).
+
+1.  **Crawler**: `lib/search-index.ts` walks the `content/docs` directory.
+2.  **Extraction**: It parses frontmatter and strips Markdown syntax to create plain text.
+3.  **Normalization**: Data is formatted into `SearchableDoc` objects.
+4.  **API**: The data is served via the internal API route `/api/docs`.
+5.  **Ingestion**: The active `SearchProvider` fetches this data on client initialization and builds its index.
+
+## Improving Search Results
+
+To ensure users find what they need:
+
+1.  **Keywords**: Add rich keywords to your frontmatter.
+    ```yaml
+    keywords: ["authentication", "login", "oauth", "sso"]
+    ```
+2.  **Description**: Write clear descriptions; these are heavily weighted.
+3.  **Titles**: Keep titles concise and descriptive.

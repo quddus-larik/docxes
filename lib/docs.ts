@@ -138,7 +138,7 @@ export async function generateNavigation(version: string): Promise<DocNavItem[]>
     dir: string,
     parentSlugs: string[] = []
   ): Promise<DocNavItem[]> {
-    const entries = (await fs.readdir(dir)).sort()
+    const entries = await fs.readdir(dir)
     const items: DocNavItem[] = []
 
     const metaMap = new Map<
@@ -147,7 +147,7 @@ export async function generateNavigation(version: string): Promise<DocNavItem[]>
         title: string
         order: number
         isDir: boolean
-        hasMainFile: boolean
+        isClickable: boolean
       }
     >()
 
@@ -156,6 +156,14 @@ export async function generateNavigation(version: string): Promise<DocNavItem[]>
 
       const fullPath = path.join(dir, entry)
       const stat = await fs.stat(fullPath)
+      const name = entry.replace(/\.(mdx|md)$/, "")
+
+      let existing = metaMap.get(name) || {
+        title: name,
+        order: 999,
+        isDir: false,
+        isClickable: false
+      }
 
       /* ------------------ DIRECTORY ------------------ */
       if (stat.isDirectory()) {
@@ -165,53 +173,42 @@ export async function generateNavigation(version: string): Promise<DocNavItem[]>
         const mainMd = path.join(fullPath, "main.md")
         const hasMainFile = (await exists(mainMdx)) || (await exists(mainMd))
 
-        let title = entry
-        let order = 999
+        existing.isDir = true
 
         if (hasMainFile) {
           const mainFile = (await exists(mainMdx)) ? mainMdx : mainMd
           try {
-            const content = await fs.readFile(mainFile, "utf-8")
-            const { data } = matter(content)
-            title = data.title || title
-            order = data.order ?? order
+            const fileContent = await fs.readFile(mainFile, "utf-8")
+            const { data, content } = matter(fileContent)
+            existing.title = data.title || existing.title
+            existing.order = data.order ?? existing.order
+            if (content.trim().length > 0) {
+              existing.isClickable = true
+            }
           } catch {}
         }
-
-        metaMap.set(entry, {
-          title,
-          order,
-          isDir: true,
-          hasMainFile,
-        })
       }
 
       /* ------------------ FILE ------------------ */
       else if (entry.endsWith(".md") || entry.endsWith(".mdx")) {
-        const name = entry.replace(/\.(mdx|md)$/, "")
         if (name === "main" || name === "index") continue
 
-        let title = name
-        let order = 999
-
         try {
-          const content = await fs.readFile(fullPath, "utf-8")
-          const { data } = matter(content)
-          title = data.title || title
-          order = data.order ?? order
+          const fileContent = await fs.readFile(fullPath, "utf-8")
+          const { data, content } = matter(fileContent)
+          existing.title = data.title || existing.title
+          existing.order = data.order ?? existing.order
+          if (content.trim().length > 0) {
+            existing.isClickable = true
+          }
         } catch {}
-
-        metaMap.set(name, {
-          title,
-          order,
-          isDir: false,
-          hasMainFile: false,
-        })
       }
+
+      metaMap.set(name, existing)
     }
 
     const sorted = [...metaMap.entries()].sort(
-      (a, b) => a[1].order - b[1].order
+      (a, b) => a[1].order - b[1].order || a[0].localeCompare(b[0])
     )
 
     for (const [name, meta] of sorted) {
@@ -227,11 +224,8 @@ export async function generateNavigation(version: string): Promise<DocNavItem[]>
 
         items.push({
           title: meta.title,
-          href: meta.hasMainFile
-            ? `/docs/${version}/${hrefPath}`
-            : undefined,
+          href: meta.isClickable ? `/docs/${version}/${hrefPath}` : undefined,
           items: children,
-          hasMainFile: meta.hasMainFile,
         })
       }
 
@@ -239,7 +233,7 @@ export async function generateNavigation(version: string): Promise<DocNavItem[]>
       else {
         items.push({
           title: meta.title,
-          href: `/docs/${version}/${hrefPath}`,
+          href: meta.isClickable ? `/docs/${version}/${hrefPath}` : undefined,
         })
       }
     }

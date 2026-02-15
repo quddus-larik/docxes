@@ -12,6 +12,13 @@ import { Badge } from "@/components/ui/badge";
 import { AlertCircle, Info, CheckCircle2, AlertTriangle } from "lucide-react";
 import { CodeBlock } from "./code-block";
 import { MdxTable } from "./mdx-table";
+import {
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
+} from "@/components/ui/table";
 import { Step, StepsWithCounter, StepsConnected, CodeStep } from "@/components/mdx/mdx-steps";
 
 function getText(children: React.ReactNode | any): string {
@@ -118,6 +125,13 @@ export const mdxComponents = {
   figcaption: () => null,
 
   table: MdxTable,
+  thead: TableHeader,
+  tbody: TableBody,
+  tr: TableRow,
+  th: TableHead,
+  td: TableCell,
+
+  MdxTable,
 
   MdxCard: ({ title, description, children, variant = "default" }: any) => (
     <Card

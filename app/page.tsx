@@ -176,7 +176,7 @@ export const XMeta = createConfig({
           </div>
           
           <div className="relative group">
-            <div className="absolute -inset-1 bg-gradient-to-r from-primary/20 to-purple-500/20 rounded-2xl blur opacity-75 group-hover:opacity-100 transition duration-1000 group-hover:duration-200"></div>
+            <div className="absolute -inset-1 bg-linear-to-r from-primary/20 to-purple-500/20 rounded-2xl blur opacity-75 group-hover:opacity-100 transition duration-1000 group-hover:duration-200"></div>
             <div className="relative bg-zinc-950 rounded-xl overflow-hidden shadow-2xl">
               <div className="flex items-center justify-between px-4 py-2 bg-zinc-900/50 border-b border-white/5">
                 <div className="flex gap-1.5">

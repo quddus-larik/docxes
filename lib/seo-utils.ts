@@ -74,7 +74,7 @@ export function generateArticleSchema({
     url: `${XMeta.siteUrl}/docs/${version}/${slug.join("/")}`,
     author: {
       "@type": "Organization",
-      name: "DocX",
+      name: "Docxes",
     },
   };
 }

@@ -9,35 +9,51 @@ interface PreProps extends React.HTMLAttributes<HTMLPreElement> {
   children: React.ReactNode;
 }
 
-export const CodeBlock: React.FC<PreProps> = ({ className, children, ...props }) => {
+export const CodeBlock: React.FC<PreProps> = ({
+  className,
+  children,
+  ...props
+}) => {
   const [copied, setCopied] = useState(false);
   const preRef = useRef<HTMLPreElement>(null);
 
   const handleCopy = () => {
-    if (preRef.current) {
-      const text = preRef.current.innerText; // get actual text from DOM
-      navigator.clipboard.writeText(text);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    }
+    if (!preRef.current) return;
+
+    const text = preRef.current.innerText;
+    navigator.clipboard.writeText(text);
+
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
 
   return (
-    <div className="relative w-full bg-muted p-1 rounded-sm my-1">
+    <div className="relative w-full rounded-md border bg-muted my-2">
+      {/* Scrollable Area */}
       <pre
         ref={preRef}
-        className={className || "rounded bg-green px-1 py-0.5 text-sm"}
+        className={`
+          max-h-100 overflow-auto
+          whitespace-pre
+          px-4 py-3 text-sm font-mono
+          ${className || ""}
+        `}
         {...props}
       >
-        {children} {props.title}
+        <code>{children}</code>
       </pre>
+
       <Button
-        size="icon-sm"
+        size="icon"
         variant="outline"
-        className="absolute top-1 right-1 flex items-center gap-1 z-10"
+        className="absolute top-2 right-2 z-10 h-7 w-7"
         onClick={handleCopy}
       >
-        {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+        {copied ? (
+          <Check className="w-4 h-4 text-green-500" />
+        ) : (
+          <Copy className="w-4 h-4" />
+        )}
       </Button>
     </div>
   );

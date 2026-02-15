@@ -6,6 +6,8 @@ import { Header } from "@/components/header";
 import { ModeToggle } from "@/components/mode-toggle";
 import { XMetaConfig } from "@/types/interface";
 
+import { VersionSelect } from "@/components/version-select";
+
 const defaults: XMetaConfig = {
   siteName: "DocXes",
   description: "A dynamic documentation generator framework",
@@ -19,9 +21,24 @@ const defaults: XMetaConfig = {
       keepBackground: false,
     },
   },
-  header: Header,
+  header: () => <p>Header</p>,
   modeToggle: ModeToggle,
-  sidebar: { component: DocSidebar, styles: {} },
+  sidebar: { 
+    component: DocSidebar, 
+    styles: {},
+    header: ({ version, versions }: { version: string; versions?: string[] }) => {
+      return (
+        <div className="px-6 py-4 border-b">
+          <div className="flex items-center justify-between mb-4">
+            <span className="font-bold text-sm tracking-tight">Documentation</span>
+          </div>
+          {versions && versions.length > 1 && (
+            <VersionSelect versions={versions} currentVersion={version} />
+          )}
+        </div>
+      )
+    }
+  },
   toc: { component: DocTOC, styles: {} },
   pagination: { component: DocPagination, styles: {} },
   versions: { default: "v1" }
@@ -39,7 +56,3 @@ export const createConfig = (overrides: Partial<XMetaConfig> = {}): XMetaConfig 
     versions: { ...defaults.versions, ...overrides.versions },
   };
 };
-
-/* -------------------------------------------------------------------------- */
-/*                            ACTIVE CONFIGURATION                            */
-/* -------------------------------------------------------------------------- */
