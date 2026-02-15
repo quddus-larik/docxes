@@ -5,6 +5,7 @@ import { XMetaConfig, HeaderProps } from "@/types/interface";
 import { cn } from "@/lib/utils";
 import { SearchDialog } from "@/components/search-dialog";
 import { ModeToggle } from "@/components/mode-toggle";
+import { VersionSelect } from "@/components/version-select";
 
 /**
  * Curved UI Customization for DocX
@@ -31,17 +32,26 @@ export const CurvedUI: Partial<XMetaConfig> = {
   },
 
   sidebar: {
-    header: ({ version }: { version: string }) => (
-      <div className="px-6 py-6 flex flex-col gap-2">
+    header: ({ version, versions }: { version: string; versions: string[] }) => (
+      <div className="px-6 py-6 flex flex-col gap-4">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-bold shadow-lg shadow-primary/20">
             D
           </div>
           <div className="font-extrabold text-xl tracking-tight">DocX</div>
         </div>
+        
+        {versions && versions.length > 1 && (
+          <VersionSelect 
+            versions={versions} 
+            currentVersion={version} 
+            className="rounded-2xl border-none bg-secondary/50 p-2.5 font-medium"
+          />
+        )}
+
         <div className="flex px-1">
           <Badge variant="secondary" className="rounded-full px-3 py-0 text-[10px] font-bold uppercase tracking-wider">
-            Edition {version}
+            Active: {version}
           </Badge>
         </div>
       </div>

@@ -47,7 +47,7 @@ export default async function DocsPage({ params }: PageProps) {
           versions={allVersions}
           item={SidebarItem}
           styles={styles?.sidebar} 
-          header={SidebarHeader ? <SidebarHeader version={version} /> : null}
+          header={SidebarHeader ? <SidebarHeader version={version} versions={allVersions} /> : null}
           footer={SidebarFooter ? <SidebarFooter version={version} /> : null}
         />
 

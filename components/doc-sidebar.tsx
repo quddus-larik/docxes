@@ -208,28 +208,8 @@ export function DocSidebar({
       >
         {header}
         
-        <div className="flex-1 overflow-y-auto px-3 pt-16 lg:pt-4">
+        <div className="flex-1 overflow-y-auto px-3 py-4">
           <nav className={cn("flex flex-col gap-4", s.nav)}>
-            {isVersionsLoading ? (
-              <div className={s.sectionTitle}>Loading versions…</div>
-            ) : versions.length > 1 ? (
-              <div className="px-3">
-                <select 
-                  value={version}
-                  onChange={(e) => router.push(`/docs/${e.target.value}`)}
-                  className="w-full p-2 rounded-md border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                >
-                  {versions.map((v) => (
-                    <option key={v} value={v}>
-                      {v.toUpperCase()}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            ) : (
-              <div className={s.sectionTitle}>{version.toUpperCase()}</div>
-            )}
-
             {isNavLoading ? (
               <div className="px-3 py-2 text-xs text-muted-foreground italic">
                 Loading navigation…

@@ -58,7 +58,7 @@ export interface XMetaConfig {
   sidebar: {
     component?: React.ComponentType<SidebarProps>;
     item?: React.ComponentType<{ item: DocNavItem; isActive: boolean; depth: number; onClick: () => void }>;
-    header?: React.ComponentType<{ version: string }>;
+    header?: React.ComponentType<{ version: string; versions: string[] }>;
     footer?: React.ComponentType<{ version: string }>;
     styles?: DocSidebarStyles;
   };
