@@ -125,7 +125,7 @@ export default async function RootLayout({
                 versions={versions} 
               />
             )}
-            <main className="flex-1">
+            <main className="flex-1 flex flex-col">
               <Suspense fallback={<div>Loading...</div>}>
                 {children}
               </Suspense>

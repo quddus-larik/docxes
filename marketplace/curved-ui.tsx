@@ -6,6 +6,9 @@ import { cn } from "@/lib/utils";
 import { SearchDialog } from "@/components/search-dialog";
 import { ModeToggle } from "@/components/mode-toggle";
 import { VersionSelect } from "@/components/version-select";
+import { Menu } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useSidebar } from "@/components/sidebar-context";
 
 /**
  * Curved UI Customization for DocX
@@ -84,26 +87,39 @@ export const CurvedUI: Partial<XMetaConfig> = {
     }
   },
 
-  header: ({ siteName, versions }: HeaderProps) => (
-    <header className="sticky top-4 z-50 w-[calc(100%-2rem)] mx-auto mt-4 rounded-full border bg-background/80 backdrop-blur-xl shadow-lg shadow-black/5">
-      <div className="container flex h-14 items-center justify-between px-6">
-        <div className="flex items-center gap-8">
-          <Link href="/" className="font-black text-xl tracking-tighter hover:opacity-80 transition-opacity">
-            {siteName}
-          </Link>
-          <nav className="hidden md:flex items-center gap-6">
-            <Link href="/docs" className="text-sm font-semibold text-muted-foreground hover:text-primary transition-colors">Docs</Link>
+  header: ({ siteName, versions }: HeaderProps) => {
+    const { toggle } = useSidebar();
+    return (
+      <header className="sticky top-4 z-50 w-[calc(100%-2rem)] mx-auto mt-4 rounded-full border bg-background/80 backdrop-blur-xl shadow-lg shadow-black/5">
+        <div className="container flex h-14 items-center justify-between px-6">
+          <div className="flex items-center gap-8">
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="lg:hidden h-8 w-8 rounded-full"
+                onClick={toggle}
+              >
+                <Menu className="h-4 w-4" />
+              </Button>
+              <Link href="/" className="font-black text-xl tracking-tighter hover:opacity-80 transition-opacity">
+                {siteName}
+              </Link>
+            </div>
+            <nav className="hidden md:flex items-center gap-6">
+              <Link href="/docs" className="text-sm font-semibold text-muted-foreground hover:text-primary transition-colors">Docs</Link>
             </nav>
-        </div>
-        <div className="flex items-center gap-4">
-          <div className="hidden sm:block">
-            <SearchDialog />
           </div>
-          <ModeToggle />
+          <div className="flex items-center gap-4">
+            <div className="hidden sm:block">
+              <SearchDialog />
+            </div>
+            <ModeToggle />
+          </div>
         </div>
-      </div>
-    </header>
-  )
+      </header>
+    )
+  }
 };
 
 export default CurvedUI;

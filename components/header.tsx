@@ -4,6 +4,9 @@ import React from "react"
 import Link from "next/link"
 import { useParams, useRouter, usePathname } from "next/navigation"
 import { SearchDialog } from "./search-dialog"
+import { PanelLeft } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { useSidebar } from "./sidebar-context"
 import { cn } from "@/lib/utils"
 import { XMeta } from "@/x-meta.config"
 import { HeaderProps } from "@/types/interface"
@@ -70,6 +73,7 @@ function ListItem({
 
 
 export function Header({ siteName, className, versions }: HeaderProps) {
+  const { toggle } = useSidebar();
   const ModeToggle = XMeta.modeToggle;
   const params = useParams();
   const router = useRouter();
@@ -95,26 +99,22 @@ export function Header({ siteName, className, versions }: HeaderProps) {
       <div className="container mx-auto flex h-14 items-center justify-between px-2">
         <div className="flex items-center gap-6">
           <div className="flex items-center gap-3">
-            <Link href="/" className="flex items-center space-x-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="lg:hidden h-8 w-8"
+              onClick={toggle}
+              aria-label="Toggle Sidebar"
+            >
+              <PanelLeft className="h-4 w-4" />
+            </Button>
+            <Link href="/" className="hidden md:flex items-center space-x-2">
               <span className="font-bold text-lg tracking-tight hover:opacity-80 transition-opacity whitespace-nowrap">
                 {siteName}
               </span>
             </Link>
             
-            {versions && versions.length > 1 && (
-              <Select value={currentVersion} onValueChange={handleVersionChange}>
-                <SelectTrigger size="sm" className="h-7 w-fit bg-muted/50 text-[10px] font-medium uppercase tracking-wider">
-                  <SelectValue placeholder="Version" />
-                </SelectTrigger>
-                <SelectContent>
-                  {versions.map((v) => (
-                    <SelectItem key={v} value={v} className="text-xs uppercase font-medium">
-                      {v}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
+            
           </div>
           
           <NavigationMenu className="hidden md:flex">

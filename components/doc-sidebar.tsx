@@ -189,19 +189,10 @@ export function DocSidebar({
 
   return (
     <>
-      {/* Mobile toggle - Pure Tailwind/HTML */}
-      <button
-        className="fixed top-4 left-4 z-40 lg:hidden p-2 bg-background border rounded-md shadow-sm"
-        onClick={() => setOpen(!open)}
-        aria-label="Toggle Menu"
-      >
-        {open ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-      </button>
-
       {/* Sidebar */}
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-30 transition-transform duration-200 lg:sticky lg:top-14 lg:self-start lg:translate-x-0 h-[calc(100vh-3.5rem)]",
+          "fixed inset-y-0 left-0 z-30 transition-transform duration-200 lg:sticky lg:top-14 lg:self-start lg:translate-x-0 h-full lg:min-h-[calc(100vh-3.5rem)]",
           s.sidebar,
           open ? "translate-x-0" : "-translate-x-full"
         )}
