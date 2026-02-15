@@ -8,34 +8,40 @@ order: 4
 
 You can define custom headers, footers, and item renderers directly in your config using arrow functions. These functions receive default parameters to help you stay in sync with the framework.
 
-### Custom Sidebar Header
-
-```tsx
-sidebar: {
-  header: ({ version }) => (
-    <div className="p-6 border-b">
-      <h2 className="text-xl font-bold">My Project</h2>
-      <span className="text-xs bg-primary text-white px-2 py-0.5 rounded">
-        v{version}
-      </span>
-    </div>
-  ),
-}
-```
-
 ### Custom Page Header
 
 The main site header can also be customized:
 
 ```tsx
-header: ({ siteName, versions }) => (
-  <header className="flex justify-between items-center p-4 bg-white shadow">
-    <Logo />
-    <nav>
-      {versions.map(v => <a key={v} href={`/docs/${v}`}>{v}</a>)}
-    </nav>
-  </header>
-)
+// x-meta.config.tsx
+import { Header } from "@/my-comp";
+const XMeta = createConfig({
+  ...XMeta,
+  header: ({ siteName, versions }) => (
+    <header className="flex justify-between items-center p-4 bg-white shadow">
+      <Logo />
+      <nav>
+        {versions.map((v) => (
+          <a key={v} href={`/docs/${v}`}>
+            {v}
+          </a>
+        ))}
+      </nav>
+    </header>
+  ),
+});
+```
+
+### Custom without params
+
+```tsx
+// x-meta.config.tsx
+import { Header } from "@/my-comp";
+const XMeta = createConfig({
+  ...XMeta,
+  header: Header,
+});
+header: Header;
 ```
 
 ## Component Slots
