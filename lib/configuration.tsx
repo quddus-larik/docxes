@@ -19,7 +19,7 @@ const defaults: XMetaConfig = {
       keepBackground: false,
     },
   },
-  header: Header,
+  header: () => <p>Header</p>,
   modeToggle: ModeToggle,
   sidebar: { component: DocSidebar, styles: {} },
   toc: { component: DocTOC, styles: {} },
