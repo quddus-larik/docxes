@@ -39,7 +39,3 @@ export const createConfig = (overrides: Partial<XMetaConfig> = {}): XMetaConfig 
     versions: { ...defaults.versions, ...overrides.versions },
   };
 };
-
-/* -------------------------------------------------------------------------- */
-/*                            ACTIVE CONFIGURATION                            */
-/* -------------------------------------------------------------------------- */
