@@ -70,11 +70,14 @@ const defaults: XMetaConfig = {
       theme: "github-dark",
       keepBackground: false,
     },
-    cssVars: {  // [keys]: [hex | rgb() | etc]
-       light: "", 
-       dark: "",
-       root: ""
-     }
+    cssVars:{
+      light: {
+        "background":"", 
+      },
+      dark: {
+        "background":"", 
+      },
+    }
   },
   header: Header,
   modeToggle: ModeToggle,
@@ -134,9 +137,12 @@ cosnt XMeta = createConfig({
   ...XMeta(any),
   theme:{
     cssVars:{
-      light: "",
-      dark: "",
-      root: ""
+      light: {
+        "background":"", 
+      },
+      dark: {
+        "background":"", 
+      },
     }
   }
 })
