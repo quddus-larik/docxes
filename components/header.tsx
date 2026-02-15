@@ -88,7 +88,7 @@ export function Header({ siteName, className, versions }: HeaderProps) {
   };
   
   return (
-    <header className={cn("sticky top-0 w-full border-b bg-background/95 z-50 backdrop-blur supports-[backdrop-filter]:bg-background/60", className)}>
+    <header className={cn("sticky top-0 w-full border-b bg-background/95 z-50 backdrop-blur supports-backdrop-filter:bg-background/60", className)}>
       <div className="container mx-auto flex h-14 items-center justify-between px-2">
         <div className="flex items-center gap-6">
           <div className="flex items-center gap-3">
