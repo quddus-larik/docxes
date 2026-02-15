@@ -152,10 +152,28 @@ function SearchResults({
             <div className="font-medium text-sm">{result.title}</div>
             {result.description && <div className="text-xs text-muted-foreground line-clamp-1">{result.description}</div>}
             {result.keywords && result.keywords.length > 0 && (
-              <div className="flex gap-1 mt-1 flex-wrap">
-                {result.keywords.slice(0, 3).map((keyword: string) => (
-                  <Badge key={keyword} variant="secondary" className="text-[10px]">{keyword}</Badge>
-                ))}
+              <div className="flex gap-1 mt-1.5 flex-wrap">
+                {result.keywords
+                  .sort((a, b) => {
+                    const aMatch = a.toLowerCase().includes(query.toLowerCase())
+                    const bMatch = b.toLowerCase().includes(query.toLowerCase())
+                    if (aMatch && !bMatch) return -1
+                    if (!aMatch && bMatch) return 1
+                    return 0
+                  })
+                  .slice(0, 5)
+                  .map((keyword: string) => {
+                    const isMatch = keyword.toLowerCase().includes(query.toLowerCase())
+                    return (
+                      <Badge
+                        key={keyword}
+                        variant={isMatch ? "default" : "secondary"}
+                        className="text-[10px] px-1.5 py-0 leading-none h-4"
+                      >
+                        {keyword}
+                      </Badge>
+                    )
+                  })}
               </div>
             )}
           </div>
