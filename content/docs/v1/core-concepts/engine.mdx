@@ -1,0 +1,71 @@
+In DocX, the document loading process follows a structured pipeline from the URL request to the final rendered MDX. Here is the step-by-step
+  flow:
+
+
+  1. Request Handling
+  When a user visits a documentation URL (e.g., /docs/v1/getting-started/intro), the Next.js catch-all route at
+  app/docs/[version]/[[...slug]]/page.tsx captures the version and slug.
+
+
+  2. Data Resolution (useContentData)
+  The page calls the useContentData hook, which orchestrates the following:
+   * Version Validation: Checks if the requested version exists in the content/docs directory.
+   * Navigation & Metadata: Fetches the sidebar structure and available versions.
+   * SEO: Generates JSON-LD Article and Breadcrumb schemas.
+
+
+  3. The Engine Pipeline (DocxesEngine)
+  The core logic resides in core/engine/engine.ts. When engine.getDoc() is called:
+   1. File Discovery: It searches content/docs/[version]/ for a matching .mdx, .md, or a directory containing a main.mdx file.
+   2. Parsing: It extracts Frontmatter (title, description, etc.) and raw content.
+   3. TOC Generation: It scans headings to build the Table of Contents.
+   4. Compilation: The MDX is compiled into JavaScript using the compiler.ts (leveraging @mdx-js).
+   5. Caching: Results are stored in the CacheManager to ensure near-instant subsequent loads.
+
+
+  4. Layout & Styling (XMeta)
+  Components and styles are injected dynamically from x-meta.config.tsx. This allows you to swap your entire UI (like switching from minimal-ui
+  to shadcn-ui) without changing the engine.
+
+
+  5. Final Rendering
+  The DocsPage component receives the compiled content and metadata:
+   * Sidebar & TOC: Rendered into their respective "slots" defined in the config.
+   * MDX Content: Rendered via AppMDXProvider, which maps standard Markdown elements to your custom React components (found in
+     components/mdx/).
+
+The .docxes folder is generated to serve as a persistent cache directory.
+
+
+  It stores pre-compiled MDX artifacts (AST, metadata, and compiled JavaScript) as JSON files. This allows the engine to skip the heavy parsing
+  and compilation steps on subsequent requests, significantly improving performance and reducing Time To First Byte (TTFB).
+
+  The current architecture is actually significantly more optimized than your previous setup precisely because of the .docxes engine. Here is
+  why:
+
+
+  1. CPU Bottleneck: Compilation vs. Rendering
+  In your previous setup, the high CPU usage likely came from calling serialize() on every request. serialize() is the heavy process that runs
+  Remark, Rehype, and the MDX compiler.
+
+
+  In the new engine:
+   * Previous: Request → Read MDX → serialize() (CPU Intensive) → Render.
+   * Current: Request → Check .docxes → Return JSON (Near Zero CPU) → Render.
+
+  By caching the compiledSource in .docxes, we skip the entire compilation phase for 99% of requests.
+
+
+  2. How MDXRemote is being used
+  The DocxesRenderer receives the already serialized object. When MDXRemote receives pre-serialized data, it doesn't "compile" anything; it
+  simply hydrates the pre-built JavaScript. This is very light on the CPU.
+
+
+  3. Further Optimization (RSC)
+  If you want to reach "maximum" optimization (reducing client-side CPU and bundle size), we can move the renderer to React Server Components
+  (RSC) using next-mdx-remote/rsc.
+
+
+  Currently, AppMDXProvider is a "use client" component, which means the MDX is "executed" on the user's browser. Switching to RSC would:
+   1. Reduce Bundle Size: Remove next-mdx-remote code from the browser.
+   2. Zero Client CPU: The browser receives pure HTML instead of an MDX hydration object.
