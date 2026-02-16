@@ -7,6 +7,7 @@ export async function compile(content: string, options: any = {}) {
   const theme = mdxOptions.theme || "github-dark";
   const keepBackground = mdxOptions.keepBackground !== undefined ? mdxOptions.keepBackground : true;
 
+  // get mdx code and saperate codes and highlight
   const mdxSource = await serialize(content, {
     mdxOptions: {
       remarkPlugins: options.remarkPlugins || [],
@@ -17,7 +18,7 @@ export async function compile(content: string, options: any = {}) {
       ],
       format: "mdx",
     },
-    parseFrontmatter: false, // We handle it in parser.ts
+    parseFrontmatter: false, 
   });
 
   return mdxSource;
