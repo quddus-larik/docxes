@@ -22,7 +22,8 @@ export const XMeta = createConfig({
   theme:{
     mdx:{
       highlighter: "pretty-code",
-      keepBackground: false
+      theme: "github-dark",
+      keepBackground: true
     }
   },
   sidebar: {
