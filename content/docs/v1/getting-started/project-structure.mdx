@@ -10,20 +10,15 @@ A typical DocXes project is organized for clarity and separation of concerns. Si
 ├── content/
 │   └── docs/             # Your content lives here
 │       └── v1/           # Version folder (required)
-│           ├── intro.mdx
-│           └── guides/   # Sub-sections
+├── core/
+│   └── engine/           # 🚀 The DocXes Engine Core
 ├── components/
 │   ├── ui/               # Reusable UI primitives (Buttons, Inputs)
 │   ├── mdx/              # MDX components (Alerts, CodeBlocks)
-│   └── ...               # Core layout components
 ├── lib/
-│   ├── docs.ts           # Documentation engine & navigation logic
-│   ├── search-index.ts   # Search indexing logic
+│   ├── engine.ts         # Shared engine instance
 │   └── configuration.tsx # Config merger
 ├── marketplace/          # Pre-built Theme Formulas (Shadcn, Curved)
-├── hooks/                # State management hooks
-├── public/               # Static assets (images, fonts)
-├── app/                  # Next.js App Router (pages & layouts)
 ├── x-meta.config.tsx     # ⚙️ Main Configuration File
 └── package.json
 ```
@@ -33,17 +28,16 @@ A typical DocXes project is organized for clarity and separation of concerns. Si
 ### `content/docs/`
 This is the most important folder for content creators. The structure here directly mirrors your site's sidebar navigation and URL routes.
 
+### `core/engine/`
+The heart of DocXes. This framework-agnostic engine handles:
+- **Parsing**: MDX parsing and frontmatter extraction.
+- **Compiling**: Converting MDX to serializable React code.
+- **Navigation**: Automatically building the sidebar tree.
+- **Search**: Generating high-performance search indices.
+
 ### `x-meta.config.tsx`
 The central control panel. Here you define:
 - Site Metadata (Title, Description, URL)
 - Active Theme (Marketplace formula)
 - UI Overrides (Slots for Header, Sidebar, etc.)
 - Search Provider Configuration
-
-### `marketplace/`
-Contains the "Theme Formulas". These are TypeScript objects that define the look and feel of your site. You can edit these files directly to create your own custom design system.
-
-### `lib/` & `hooks/`
-These folders contain the "engine" of DocXes. While you can modify them, they are pre-configured to handle:
-- **`lib/docs.ts`**: Reading files, parsing frontmatter, and building the navigation tree.
-- **`hooks/useSidebar.ts`**: Managing the sidebar's open/close state and expansion logic.

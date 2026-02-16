@@ -1,49 +1,57 @@
 ---
 title: Architecture
-description: A deep dive into the DocXes technical foundation.
-order: 1
+description: Deep dive into the DocXes documentation engine and rendering pipeline.
 ---
 
+# Architecture
 
-DocXes is built on a "Zero-Core" philosophy. It provides a robust infrastructure for documentation without the complexity of a proprietary, compiled core.
+DocXes is built with a focus on high-performance documentation rendering. It decouples content processing from the UI layer using a custom framework-agnostic engine.
 
-## Technology Stack
+## The Rendering Pipeline
 
-- **Next.js 16 (Turbopack)**: Blazing fast development and optimized builds.
-- **React 19**: Leveraging the latest concurrent features and server components.
-- **Tailwind v4**: Atomic CSS with native CSS variables for high-performance theming.
-- **MDX**: Markdown with React component support.
-- **Shiki**: High-fidelity syntax highlighting using VS Code's rendering engine.
-- **FlexSearch**: High-performance, contextual search indexing.
+When you request a documentation page, DocXes follows a structured pipeline to transform raw MDX files into interactive React components.
 
-## Core Systems
+### 1. Request Handling
+Every request to `/docs/[version]/[slug]` is captured by a Next.js dynamic route. The `useContentData` hook orchestrates the data fetching process.
 
-### 1. Content Resolution
-The framework uses Node.js `fs/promises` to walk the `content/docs` directory.
-- **Lazy Loading**: Content is only parsed when requested.
-- **Parallel Indexing**: Navigation trees and search indexes are built in parallel using `Promise.all`.
-- **Caching**: The `SidebarCacheProvider` ensures that heavy directory walking only happens once per version during a session.
+### 2. The DocXes Engine Core
+The heart of the system is the `DocxesEngine` located in `core/engine`. It performs the following steps:
 
-### 2. Plugin & Slot System
-The interface is decoupled from the data layer via a registry pattern.
-- **Interface Abstraction**: `SidebarProps`, `TOCProps`, and `HeaderProps` define the contract between the framework and the UI.
-- **Dependency Injection**: Themes in the `marketplace/` are just partial configuration objects that get merged into the main `XMeta` config.
+1.  **Parse**: Uses `gray-matter` to extract frontmatter and `remark` to generate an initial Abstract Syntax Tree (AST).
+2.  **Transform**: Scans the AST to generate metadata, such as the Table of Contents (TOC) and reading time.
+3.  **Compile**: Converts the MDX content into a serializable JavaScript object using `next-mdx-remote/serialize`.
+4.  **Cache**: Stores the output (AST, metadata, and compiled code) in the `.docxes` directory. Subsequent requests for the same file are served instantly from this cache.
 
-### 3. Headless Customization
-We avoid runtime styling overhead (like `styled-components`) to maintain high Core Web Vitals.
-- **ThemeInjector**: A client component that parses the `XMeta.theme.cssVars` and injects them as native CSS variables into the `:root` or `.dark` classes.
-- **Design Tokens**: Every UI primitive in `components/ui/` consumes these CSS variables, allowing for "instant" global restyling.
+### 3. Client Hydration
+The compiled code is passed to the `AppMDXProvider`, which uses the `DocxesRenderer`. This component hydrates the static content on the client, injecting custom interactive components like code blocks with copy buttons and alerts.
 
-### 4. Search Abstraction
-Search is decoupled from any specific engine.
-- **Provider Pattern**: By implementing the `SearchProviderInterface`, you can swap the local engine for Algolia, Meilisearch, or a custom API.
-- **Normalizer**: The framework normalizes all content into a standard `SearchableDoc` format before indexing.
+---
 
-## Data Flow
+## Navigation & Sidebar
 
-1. **Request**: A user visits `/docs/v1/guide`.
-2. **Server Action**: `useContentData` validates the route and retrieves the document.
-3. **Parallel Fetch**: Navigation (`lib/docs.ts`) and Search Metadata are resolved.
-4. **Composition**: The `RootLayout` retrieves the global `header` and `footer` from `XMeta`.
-5. **Injection**: `ThemeInjector` sets the design tokens.
-6. **Hydration**: React hydrates only the necessary interactive parts (sidebar toggle, search dialog, version picker).
+The sidebar logic is driven by the file system but enriched by the engine.
+
+-   **Structure**: The `generateNavigation` function recursively scans the `content/docs` directory.
+-   **Metadata**: It uses the engine's `parse` method to read the `title` and `order` directly from each file's frontmatter.
+-   **Dynamic Tree**: This results in a nested navigation object that is passed to the `DocSidebar` component.
+
+---
+
+## Table of Contents (TOC)
+
+DocXes generates the Table of Contents automatically without any manual configuration.
+
+1.  **Extraction**: During the engine's transformation phase, it visits all `heading` nodes in the AST.
+2.  **ID Generation**: It generates URL-safe slugs for each heading (e.g., `#the-rendering-pipeline`).
+3.  **Rendering**: The `DocTOC` component receives these headings as metadata. It uses a custom hook (`useDocTOC`) to track the user's scroll position and highlight the active section in real-time.
+
+---
+
+## Performance Strategy
+
+DocXes is optimized for "Production-Level" speed:
+
+-   **Pre-compiled Artifacts**: By caching the compiled MDX in `.docxes`, we eliminate the heavy processing overhead on the server.
+-   **Incremental Updates**: Only modified files are re-processed, making it perfect for large documentation sites.
+-   **Node Standard Imports**: Using `node:fs/promises` ensures the engine runs efficiently in the Next.js runtime environment.
+-   **Framework Agnostic**: The engine is decoupled from the UI, meaning the core logic can be tested and run independently of Next.js.
