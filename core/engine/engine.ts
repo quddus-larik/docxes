@@ -5,7 +5,8 @@ import { compile } from "./compiler";
 import { generateTOC } from "./ast/toc";
 import { PluginSystem } from "./plugins/plugin-system";
 import { CacheManager } from "./cache/cache-manager";
-import { EngineConfig, DocxesOutput, NavItem } from "./types";
+import { EngineConfig, DocxesOutput, NavItem, SearchResult } from "./types";
+import { DocFile } from "./types";
 
 export class DocxesEngine {
   private pluginSystem: PluginSystem;
