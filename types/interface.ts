@@ -1,5 +1,5 @@
 import type { DocSidebarStyles } from "@/components/doc-sidebar";
-import type { DocNavItem, DocHeading } from "@/types/types";
+import type { DocNavItem, DocHeading, DocPaginationStyles, DocTOCStyles } from "@/core/engine";
 
 export interface SidebarProps {
   items: DocNavItem[];

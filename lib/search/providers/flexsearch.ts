@@ -1,6 +1,6 @@
 import FlexSearch from "flexsearch";
 import { SearchProviderInterface, SearchResult, SearchOptions } from "../types";
-import { SearchableDoc } from "@/types/types";
+import { SearchableDoc } from "@/core/engine";
 
 export class FlexSearchProvider implements SearchProviderInterface {
   name = "flexsearch";

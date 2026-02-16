@@ -1,44 +1,17 @@
-import { MDXRemote } from "next-mdx-remote/rsc";
-import rehypePrettyCode from "rehype-pretty-code";
+"use client";
+
+import { DocxesRenderer } from "@/core/engine/renderer";
 import { mdxComponents } from "@/components/mdx/mdx-components";
-import { XMeta } from "@/x-meta.config";
 
 interface AppMDXProviderProps {
-  source: string;
+  compiled: any;
 }
 
-type HighlighterName = "pretty-code" | "none";
-
-const highlighter = (XMeta.theme?.mdx?.highlighter ??
-  "pretty-code") as HighlighterName;
-
-const mdxOptions =
-  highlighter === "pretty-code"
-    ? {
-        rehypePlugins: [
-          [
-            rehypePrettyCode,
-            {
-              theme:
-                XMeta.theme?.mdx?.theme ?? `github-${"light"}`,
-              keepBackground:
-                XMeta.theme?.mdx?.keepBackground ?? false,
-            },
-          ],
-        ],
-      }
-    : {
-        // no highlighter: still return an object for options
-      };
-
-export function AppMDXProvider({ source }: AppMDXProviderProps) {
+export function AppMDXProvider({ compiled }: AppMDXProviderProps) {
   return (
-    <MDXRemote
-      source={source}
+    <DocxesRenderer
+      compiled={compiled}
       components={mdxComponents}
-      options={{
-        mdxOptions 
-      } as any}
     />
   );
 }

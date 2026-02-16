@@ -11,7 +11,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ChevronDown, Menu, X } from "lucide-react";
-import type { DocNavItem } from "@/types/types";
+import type { DocNavItem } from "@/core/engine";
 import { useDocSidebar } from "@/hooks/useSidebar";
 import { cn } from "@/lib/utils";
 
@@ -79,7 +79,7 @@ export function DocSidebar({
     isActive,
     shouldExpand,
     getItemId,
-  } = useDocSidebar(version, currentPath);
+  } = useDocSidebar(version, currentPath, initialItems, initialVersions);
 
   const items = initialItems || hookItems;
   const versions = initialVersions || hookVersions;

@@ -1,6 +1,6 @@
 import Fuse from "fuse.js";
 import { SearchProviderInterface, SearchResult, SearchOptions } from "../types";
-import { SearchableDoc } from "@/types/types";
+import { SearchableDoc } from "@/core/engine";
 
 export class LocalSearchProvider implements SearchProviderInterface {
   name = "local";

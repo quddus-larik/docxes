@@ -61,7 +61,7 @@ export default async function DocsPage({ params }: PageProps) {
                     {meta.description && (
                       <p className="text-muted-foreground text-lg mb-8">{meta.description}</p>
                     )}
-                    <AppMDXProvider source={meta.rawContent as string} />
+                    <AppMDXProvider compiled={meta.content} />
                   </article>
 
                   {/* Pagination */}

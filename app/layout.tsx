@@ -4,7 +4,7 @@ import { Analytics } from "@vercel/analytics/next"
 import { XMeta } from "@/x-meta.config"
 import { Providers } from "@/components/providers"
 import { ThemeInjector } from "@/components/theme-injector"
-import { getVersions } from "@/lib/docs"
+import { engine } from "@/lib/engine"
 import "./globals.css"
 import { Suspense } from "react"
 
@@ -95,7 +95,7 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode
 }>) {
-  const versions = await getVersions();
+  const versions = await engine.getVersions();
 
   return (
     <html lang="en" suppressHydrationWarning>

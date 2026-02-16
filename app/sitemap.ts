@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next"
-import { getVersions, getAllDocs } from "@/lib/docs"
+import { engine } from "@/lib/engine"
 import { XMeta } from "@/x-meta.config"
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
@@ -18,7 +18,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   ]
 
-  const versions = await getVersions()
+  const versions = await engine.getVersions()
 
   for (const version of versions) {
     // Add version index
@@ -30,7 +30,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     })
 
     // Add all docs for this version
-    const docs = await getAllDocs(version)
+    const docs = await engine.getAllDocs(version)
     for (const doc of docs) {
       entries.push({
         url: `${XMeta.siteUrl}/docs/${version}/${doc.slug.join("/")}`,

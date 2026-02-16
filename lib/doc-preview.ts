@@ -1,8 +1,8 @@
 import { notFound } from "next/navigation";
-import { getDoc, getVersions } from "@/lib/docs";
+import { engine } from "@/lib/engine";
 
 export async function validateVersion(version: string) {
-  const versions = await getVersions();
+  const versions = await engine.getVersions();
 
   if (!versions.includes(version)) {
     notFound();
@@ -19,7 +19,7 @@ export async function resolveDoc(
     return null;
   }
 
-  const doc = await getDoc(version, slug);
+  const doc = await engine.getDoc(version, slug);
 
   if (!doc) {
     notFound();

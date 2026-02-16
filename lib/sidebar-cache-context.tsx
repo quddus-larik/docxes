@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useCallback, useRef, ReactNode } from "react";
-import type { DocNavItem } from "@/types/types";
+import type { DocNavItem } from "@/core/engine";
 
 interface SidebarCacheContextType {
   fetchVersions: () => Promise<string[]>;
