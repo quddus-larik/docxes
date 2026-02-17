@@ -18,6 +18,7 @@ export interface DocxesMetadata {
   toc: TOCItem[];
   readingTime?: number;
   ast: any;
+  plainText?: string;
 }
 
 export interface DocxesOutput {
@@ -65,8 +66,11 @@ export interface DocFile {
   path: string;
   title: string;
   description?: string;
+  order?: number;
+  keywords?: string[];
   content: any; // Compiled MDX
   rawContent: string;
+  plainText: string;
   headings: DocHeading[];
 }
 

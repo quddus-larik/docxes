@@ -6,4 +6,3 @@ export * from "./renderer";
 export * from "./ast/toc";
 export * from "./plugins/plugin-system";
 export * from "./cache/cache-manager";
-export * from "./search-indexer";

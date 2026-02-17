@@ -1,5 +1,6 @@
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
+import { createHash } from 'node:crypto'; // Add this import
 import { parse } from "./parser";
 import { compile } from "./compiler";
 import { generateTOC } from "./ast/toc";
@@ -32,6 +33,51 @@ export class DocxesEngine {
     } catch {
       return false;
     }
+  }
+
+  async build(): Promise<void> {
+    console.log("[DocxesEngine] Starting pre-compilation build...");
+    const versions = await this.getVersions();
+    
+    // Process versions concurrently
+    await Promise.all(versions.map(async (version) => {
+      console.log(`[DocxesEngine] Processing version: ${version}`);
+
+      const versionDir = path.join(this.docsDir, version);
+      const walkAndBuild = async (dir: string, slugs: string[] = []) => {
+        const entries = await fs.readdir(dir);
+        const processingPromises: Promise<any>[] = []; // Collect promises here
+
+        for (const entry of entries) {
+          if (this.isHidden(entry)) continue;
+          const fullPath = path.join(dir, entry);
+          const stat = await fs.stat(fullPath);
+          const name = entry.replace(/\.(mdx|md)$/, "");
+          
+          if (stat.isDirectory()) {
+            // Process directory's main file and then walk sub-directory concurrently
+            processingPromises.push(
+              (async () => {
+                await this.getDoc(version, [...slugs, name]);
+                await walkAndBuild(fullPath, [...slugs, name]);
+              })()
+            );
+          } else if (entry.endsWith(".md") || entry.endsWith(".mdx")) {
+            if (name !== "main" && name !== "index") {
+              processingPromises.push(this.getDoc(version, [...slugs, name]));
+            }
+          }
+        }
+        await Promise.all(processingPromises); // Wait for all docs/sub-dirs in this level to finish
+      };
+
+      await walkAndBuild(versionDir); // Wait for all docs in this version to finish
+    })); // End Promise.all for versions
+
+    // Pre-generate search index to cache the plainText
+    await this.getSearchIndex();
+    
+    console.log("[DocxesEngine] Build complete! Cache populated in .docxes/");
   }
 
   async getVersions(): Promise<string[]> {
@@ -78,6 +124,7 @@ export class DocxesEngine {
               title: fileSlug,
               content: null,
               rawContent: "",
+              plainText: "",
               headings: [],
             });
           }
@@ -112,17 +159,32 @@ export class DocxesEngine {
 
     if (!file) return null;
 
-    const fileContent = await fs.readFile(file, "utf-8");
+    let fileContent: string;
+    try {
+      fileContent = await fs.readFile(file, "utf-8");
+    } catch (e: any) {
+      console.error(`[DocxesEngine] Failed to read documentation file "${file}":`, e);
+      throw new Error(`Failed to read documentation file "${file}": ${e.message}`);
+    }
+    
     const cacheKey = `${version}/${slug.join("/")}`;
     const output = await this.process(fileContent, cacheKey);
+
+    let keywords = output.metadata.frontmatter?.keywords || [];
+    if (typeof keywords === "string") keywords = keywords.split(",").map((k: string) => k.trim());
+
+    console.log(`[DocxesEngine] Loaded doc: ${version}/${slug.join("/")} (TOC items: ${output.metadata.toc.length})`);
 
     return {
       slug,
       path: file,
       title: output.metadata.frontmatter?.title || slug[slug.length - 1],
       description: output.metadata.frontmatter?.description,
+      order: output.metadata.frontmatter?.order,
+      keywords: keywords,
       content: output.compiled,
       rawContent: fileContent,
+      plainText: output.metadata.plainText || "",
       headings: output.metadata.toc.map((item) => ({
         level: item.depth,
         text: item.title,
@@ -132,179 +194,179 @@ export class DocxesEngine {
   }
 
   async getNavigation(version: string): Promise<NavItem[]> {
+    console.log(`[DocxesEngine] Building navigation for version: ${version}`);
     const versionDir = path.join(this.docsDir, version);
     if (!(await this.fileExists(versionDir))) return [];
 
-    const slugify = (name: string) => name.toLowerCase().replace(/\s+/g, "-").replace(/[^\w-]/g, "");
+    // Use custom slugify from config if available, otherwise use default
+    const customSlugify = this.config.slugify || ((name: string) => name.toLowerCase().replace(/[^\w\s-]/g, "").replace(/\s+/g, "-"));
 
     const processDir = async (dir: string, parentSlugs: string[] = []): Promise<NavItem[]> => {
       const entries = await fs.readdir(dir);
-      const metaMap = new Map<string, { title: string; order: number; isDir: boolean; isClickable: boolean }>();
+      const items: NavItem[] = [];
 
       for (const entry of entries) {
         if (this.isHidden(entry)) continue;
         const fullPath = path.join(dir, entry);
         const stat = await fs.stat(fullPath);
         const name = entry.replace(/\.(mdx|md)$/, "");
-
-        let existing = metaMap.get(name) || { title: name, order: 999, isDir: false, isClickable: false };
+        const slug = customSlugify(name);
+        const currentSlugs = [...parentSlugs, slug];
 
         if (stat.isDirectory()) {
-          existing.isDir = true;
-          const mainMdx = path.join(fullPath, "main.mdx");
-          const mainMd = path.join(fullPath, "main.md");
-          const mainFile = (await this.fileExists(mainMdx)) ? mainMdx : (await this.fileExists(mainMd)) ? mainMd : null;
+          const mainDoc = await this.getDoc(version, currentSlugs);
+          const children = await processDir(fullPath, currentSlugs);
+          
+          const isClickable = mainDoc && mainDoc.plainText.trim().length > 0;
 
-          if (mainFile) {
-            const { frontmatter, content } = await parse(await fs.readFile(mainFile, "utf-8"));
-            existing.title = frontmatter.title || existing.title;
-            existing.order = frontmatter.order ?? existing.order;
-            if (content.trim().length > 0) existing.isClickable = true;
+          if (children.length > 0 || mainDoc) {
+            items.push({
+              title: mainDoc?.title || name,
+              href: isClickable ? `/docs/${version}/${currentSlugs.join("/")}` : undefined,
+              items: children.length > 0 ? children : undefined,
+              order: mainDoc?.order ?? 999,
+            });
           }
         } else if (entry.endsWith(".md") || entry.endsWith(".mdx")) {
           if (name === "main" || name === "index") continue;
-          const { frontmatter, content } = await parse(await fs.readFile(fullPath, "utf-8"));
-          existing.title = frontmatter.title || existing.title;
-          existing.order = frontmatter.order ?? existing.order;
-          if (content.trim().length > 0) existing.isClickable = true;
-        }
-        metaMap.set(name, existing);
-      }
-
-      const items: NavItem[] = [];
-      const sorted = [...metaMap.entries()].sort((a, b) => a[1].order - b[1].order || a[0].localeCompare(b[0]));
-
-      for (const [name, meta] of sorted) {
-        const slug = slugify(name);
-        const hrefPath = [...parentSlugs, slug].join("/");
-        if (meta.isDir) {
-          const children = await processDir(path.join(dir, name), [...parentSlugs, slug]);
-          if (children.length > 0) {
+          const doc = await this.getDoc(version, currentSlugs);
+          if (doc) {
+            const isClickable = doc.plainText.trim().length > 0;
             items.push({
-              title: meta.title,
-              href: meta.isClickable ? `/docs/${version}/${hrefPath}` : undefined,
-              items: children,
+              title: doc.title,
+              href: isClickable ? `/docs/${version}/${currentSlugs.join("/")}` : undefined,
+              order: doc.order ?? 999,
             });
           }
-        } else {
-          items.push({
-            title: meta.title,
-            href: meta.isClickable ? `/docs/${version}/${hrefPath}` : undefined,
-          });
         }
       }
-      return items;
+
+      return items.sort((a, b) => (a.order ?? 999) - (b.order ?? 999) || a.title.localeCompare(b.title));
     };
 
-    return processDir(versionDir);
+    const nav = await processDir(versionDir);
+    console.log(`[DocxesEngine] Navigation built: ${nav.length} top-level items`);
+    return nav;
   }
 
-  async getSearchIndex(): Promise<SearchResult[]> {
+  async getSearchIndex(
+    includeFields: Array<"title" | "description" | "keywords" | "content"> = [
+      "title",
+      "description",
+      "keywords",
+      "content",
+    ]
+  ): Promise<SearchResult[]> {
+    console.log(`[DocxesEngine] Generating search index...`);
     const versions = await this.getVersions();
-    const allDocs: SearchResult[] = [];
-
-    const walkDir = async (dir: string, version: string, slug: string[] = []): Promise<SearchResult[]> => {
-      const docs: SearchResult[] = [];
-      const files = await fs.readdir(dir);
-
-      for (const file of files) {
-        if (this.isHidden(file)) continue;
-        const filePath = path.join(dir, file);
-        const stat = await fs.stat(filePath);
-
-        if (stat.isDirectory()) {
-          docs.push(...(await walkDir(filePath, version, [...slug, file])));
-        } else if (file.endsWith(".mdx") || file.endsWith(".md")) {
-          const fileSlug = file.replace(/\.(mdx?|md)$/, "");
-          if (fileSlug === "main" || fileSlug === "index") continue;
-
-          const fileContent = await fs.readFile(filePath, "utf-8");
-          const { frontmatter, content } = await parse(fileContent);
-
-          const plainContent = content.replace(/<[^>]*>/g, "").replace(/\s+/g, " ").trim();
-
-          let keywords = frontmatter.keywords || [];
-          if (typeof keywords === "string") keywords = keywords.split(",").map((k: string) => k.trim());
-
-          docs.push({
-            id: `${version}-${[...slug, fileSlug].join("/")}`,
-            title: frontmatter.title || fileSlug.replace(/-/g, " "),
-            description: frontmatter.description,
-            keywords: keywords,
-            content: plainContent,
-            version,
-            href: `/docs/${version}/${[...slug, fileSlug].join("/")}`,
-          });
-        }
-      }
-      return docs;
-    };
+    const allDocsPromises: Promise<SearchResult | null>[] = []; // Array to hold promises
 
     for (const version of versions) {
-      allDocs.push(...(await walkDir(path.join(this.docsDir, version), version)));
+      const docsMetadata = await this.getAllDocs(version); // Gets basic metadata
+      for (const docInfo of docsMetadata) {
+        // Push a promise for each getDoc call
+        allDocsPromises.push(
+          (async () => {
+            try {
+              const doc = await this.getDoc(version, docInfo.slug);
+              if (doc) {
+                let keywords = doc.keywords || [];
+                if (typeof keywords === "string")
+                  keywords = (keywords as string).split(",").map((k: string) => k.trim());
+
+                const result: SearchResult = {
+                  id: `${version}-${doc.slug.join("/")}`,
+                  version,
+                  href: `/docs/${version}/${doc.slug.join("/")}`,
+                };
+
+                if (includeFields.includes("title")) result.title = doc.title;
+                if (includeFields.includes("description")) result.description = doc.description;
+                if (includeFields.includes("keywords")) result.keywords = keywords;
+                if (includeFields.includes("content")) result.content = doc.plainText;
+
+                return result;
+              }
+            } catch (e: any) {
+              console.error(`[DocxesEngine] Error getting doc for search index "${version}/${docInfo.slug.join("/")}":`, e);
+            }
+            return null; // Return null if doc is not found or error occurs
+          })()
+        );
+      }
     }
+    
+    // Resolve all promises concurrently and filter out nulls
+    const results = await Promise.all(allDocsPromises);
+    const allDocs = results.filter((result): result is SearchResult => result !== null);
+
+    console.log(`[DocxesEngine] Search index generated: ${allDocs.length} total documents`);
     return allDocs;
   }
 
-  async search(query: string, options: { version?: string; limit?: number } = {}): Promise<SearchResult[]> {
-    const index = await this.getSearchIndex();
-    const q = query.toLowerCase();
-    
-    let results = index.filter((doc) => {
-      if (options.version && options.version !== "all" && doc.version !== options.version) return false;
-      return (
-        doc.title.toLowerCase().includes(q) ||
-        doc.description?.toLowerCase().includes(q) ||
-        doc.content.toLowerCase().includes(q) ||
-        doc.keywords?.some((k) => k.toLowerCase().includes(q))
-      );
-    });
-
-    if (options.limit) {
-      results = results.slice(0, options.limit);
-    }
-
-    return results;
-  }
-
   async process(source: string, key: string): Promise<DocxesOutput> {
-    const configHash = Buffer.from(JSON.stringify(this.config.mdx || {})).toString("base64").slice(0, 8);
-    const fullKey = `${key}_${configHash}`;
+    // Generate hashes for granular cache invalidation
+    const mdxConfigHash = createHash('sha256').update(JSON.stringify(this.config.mdx || {})).digest('hex').slice(0, 8);
+    const sourceHash = createHash('sha256').update(source).digest('hex').slice(0, 12);
+    
+    const pluginNamesHash = createHash('sha256').update(JSON.stringify(this.config.plugins?.map(p => p.name) || [])).digest('hex').slice(0, 8);
+    const slugifyHash = createHash('sha256').update(this.config.slugify ? 'custom' : 'default').digest('hex').slice(0, 8);
+
+    const fullKey = `${key}_${mdxConfigHash}_${pluginNamesHash}_${slugifyHash}_${sourceHash}`;
 
     const cached = await this.cache.get(fullKey);
-    if (cached) return cached;
-
-    // 1. Hook: beforeParse
-    const preProcessedSource = await this.pluginSystem.runHook("beforeParse", source);
-
-    // 2. Parse
-    const { content, frontmatter, ast } = await parse(preProcessedSource);
-
-    // 3. Generate Metadata (TOC, etc.)
-    const toc = await generateTOC(content);
-
-    // 4. Compile
-    const compiled = await compile(content, {
-      mdx: this.config.mdx,
-    });
-
-    const output: DocxesOutput = {
-      compiled,
-      metadata: {
-        frontmatter,
-        toc,
-        ast,
-      },
-    };
-
-    // 5. Cache
-    await this.cache.set(fullKey, output);
-
-    // 6. Hook: afterRender (optional, using compiled code as string)
-    if (this.pluginSystem) {
-      // Just an example of how one might use the hook
+    if (cached) {
+      console.log(`[DocxesEngine] Cache HIT: ${key}`);
+      return cached;
     }
 
-    return output;
+    console.log(`[DocxesEngine] Cache MISS: ${key} (Compiling...)`);
+
+    try {
+      // 1. Hook: beforeParse
+      const preProcessedSource = await this.pluginSystem.runHook("beforeParse", source);
+
+      // 2. Parse
+      let { content, frontmatter, ast } = await parse(preProcessedSource);
+
+      // 2a. Hook: afterParse
+      const afterParseResult = await this.pluginSystem.runHook("afterParse", { content, frontmatter, ast });
+      content = afterParseResult.content;
+      frontmatter = afterParseResult.frontmatter;
+      ast = afterParseResult.ast;
+
+      // 3. Generate Metadata (TOC, etc.)
+      const toc = await generateTOC(content);
+      const plainText = content.replace(/<[^>]*>/g, "").replace(/\s+/g, " ").trim();
+
+      // 4. Hook: beforeCompile
+      const preCompiledContent = await this.pluginSystem.runHook("beforeCompile", content);
+
+      // 5. Compile
+      let compiled = await compile(preCompiledContent, {
+        mdx: this.config.mdx,
+      });
+
+      // 5a. Hook: afterRender
+      compiled = await this.pluginSystem.runHook("afterRender", compiled);
+
+      const output: DocxesOutput = {
+        compiled,
+        metadata: {
+          frontmatter,
+          toc,
+          ast,
+          plainText,
+        },
+      };
+
+      // 6. Cache
+      await this.cache.set(fullKey, output);
+
+      return output;
+    } catch (e: any) {
+      console.error(`[DocxesEngine] Error processing document "${key}":`, e);
+      throw new Error(`Failed to process document "${key}": ${e.message}`);
+    }
   }
 }

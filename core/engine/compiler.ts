@@ -8,18 +8,29 @@ export async function compile(content: string, options: any = {}) {
   const keepBackground = mdxOptions.keepBackground !== undefined ? mdxOptions.keepBackground : true;
 
   // get mdx code and saperate codes and highlight
-  const mdxSource = await serialize(content, {
-    mdxOptions: {
-      remarkPlugins: options.remarkPlugins || [],
-      rehypePlugins: [
-        rehypeSlug,
-        [rehypePrettyCode, { theme, keepBackground }],
-        ...(options.rehypePlugins || []),
-      ],
-      format: "mdx",
-    },
-    parseFrontmatter: false, 
-  });
+  try {
+    const mdxSource = await serialize(content, {
+      mdxOptions: {
+        remarkPlugins: options.remarkPlugins || [],
+        rehypePlugins: [
+          rehypeSlug,
+          [rehypePrettyCode, { theme, keepBackground }],
+          ...(options.rehypePlugins || []),
+        ],
+        format: "mdx",
+      },
+      parseFrontmatter: false, 
+    });
 
-  return mdxSource;
+    return mdxSource;
+  } catch (e: any) {
+    let errorMessage = `MDX compilation failed: ${e.message}`;
+    if (e.position && e.position.start) {
+      errorMessage += ` at line ${e.position.start.line}, column ${e.position.start.column}`;
+    } else if (e.line && e.column) {
+      errorMessage += ` at line ${e.line}, column ${e.column}`;
+    }
+    // Re-throw an enhanced error for the calling context (DocxesEngine.process)
+    throw new Error(errorMessage, { cause: e });
+  }
 }
