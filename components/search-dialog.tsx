@@ -1,9 +1,8 @@
 "use client"
 
-import { useEffect, useState, useCallback } from "react"
-import { useRouter } from "next/navigation"
+import { useEffect, useState, useMemo } from "react"
+import { useFramework } from "@/core/framework"
 import {
-  Command,
   CommandDialog,
   CommandEmpty,
   CommandGroup,
@@ -12,14 +11,54 @@ import {
   CommandList,
 } from "@/components/ui/command"
 import { Badge } from "@/components/ui/badge"
-import { useSearch } from "@/components/search-context"
-import { SearchResult } from "@/lib/search/types"
+import type { SearchResult } from "@/core/engine"
+import Fuse from "fuse.js"
 
-export function SearchDialog() {
+export function SearchDialog({ versions: initialVersions = [] }: { versions?: string[] }) {
   const [open, setOpen] = useState(false)
   const [selectedVersion, setSelectedVersion] = useState<string | "all">("all")
-  const { search, versions, isReady } = useSearch()
+  const [docs, setDocs] = useState<SearchResult[]>([])
+  const [versions, setVersions] = useState<string[]>(initialVersions)
+  const [loading, setLoading] = useState(true)
+  const { useRouter } = useFramework()
   const router = useRouter()
+
+  useEffect(() => {
+    const initSearch = async () => {
+      try {
+        // Try static index first for speed and static compatibility
+        const staticRes = await fetch("/search-index.json");
+        if (staticRes.ok) {
+          const data = await staticRes.json();
+          setDocs(data);
+          setLoading(false);
+          // Still fetch versions via API if available, or fallback to empty
+          fetch("/api/docs?type=versions")
+            .then(res => res.json())
+            .then(res => { if (res.success) setVersions(res.data.versions); })
+            .catch(() => {});
+          return;
+        }
+
+        // Fallback to API
+        const [docsRes, versionsRes] = await Promise.all([
+          fetch("/api/docs?type=search").then((res) => res.json()),
+          fetch("/api/docs?type=versions").then((res) => res.json()),
+        ]);
+
+        if (docsRes.success) setDocs(docsRes.data.docs);
+        if (versionsRes.success) setVersions(versionsRes.data.versions);
+      } catch (e) {
+        console.error("Failed to initialize search data:", e);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (open && docs.length === 0) {
+      initSearch();
+    }
+  }, [open, docs.length]);
 
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
@@ -37,15 +76,11 @@ export function SearchDialog() {
     router.push(href)
   }
 
-  // If search provider is not ready, we could show a loading state or nothing
-  // But usually the button should be visible.
-  
   return (
     <>
       <button
         onClick={() => setOpen(true)}
         className="group relative inline-flex h-10 w-full items-center justify-between rounded-lg border border-input bg-background px-3 py-2 text-sm text-muted-foreground shadow-sm transition-colors hover:bg-accent hover:text-foreground md:w-64 lg:w-96"
-        disabled={!isReady}
       >
         <span className="hidden lg:inline-flex">Search documentation...</span>
         <span className="inline-flex lg:hidden">Search...</span>
@@ -56,7 +91,7 @@ export function SearchDialog() {
 
       <CommandDialog open={open} onOpenChange={setOpen} shouldFilter={false}>
         <CommandInput placeholder="Search documentation..." />
-        {versions.length > 1 && (
+        {!loading && versions.length > 1 && (
           <div className="border-b px-2 py-2">
             <div className="text-xs font-semibold text-muted-foreground mb-2">Version:</div>
             <div className="flex flex-wrap gap-2">
@@ -80,12 +115,20 @@ export function SearchDialog() {
         )}
 
         <CommandList className="max-h-[450px]">
-          <CommandEmpty>No results found.</CommandEmpty>
-          <SearchResults
-            search={search}
-            onNavigate={handleSelect}
-            selectedVersion={selectedVersion}
-          />
+          {loading ? (
+            <div className="py-6 text-center text-sm text-muted-foreground">
+              Loading search index...
+            </div>
+          ) : (
+            <>
+              <CommandEmpty>No results found.</CommandEmpty>
+              <SearchResults
+                docs={docs}
+                onNavigate={handleSelect}
+                selectedVersion={selectedVersion}
+              />
+            </>
+          )}
         </CommandList>
       </CommandDialog>
     </>
@@ -93,49 +136,51 @@ export function SearchDialog() {
 }
 
 function SearchResults({
-  search,
+  docs,
   onNavigate,
   selectedVersion,
 }: {
-  search: (query: string, options?: any) => Promise<SearchResult[]>
+  docs: SearchResult[]
   onNavigate: (href: string) => void
   selectedVersion: string
 }) {
   const [query, setQuery] = useState("")
-  const [results, setResults] = useState<SearchResult[]>([])
+  
+  const fuse = useMemo(() => {
+    return new Fuse(docs, {
+      keys: [
+        { name: 'title', weight: 0.7 },
+        { name: 'content', weight: 0.3 },
+        { name: 'description', weight: 0.5 },
+        { name: 'keywords', weight: 0.4 }
+      ],
+      threshold: 0.3,
+      includeMatches: true,
+      minMatchCharLength: 2,
+    });
+  }, [docs]);
 
   useEffect(() => {
     const input = document.querySelector("[cmdk-input]") as HTMLInputElement
     if (input) {
       const handleChange = () => setQuery(input.value)
-      // Initial value
       setQuery(input.value)
-      
       input.addEventListener("input", handleChange)
       return () => input.removeEventListener("input", handleChange)
     }
   }, [])
 
-  useEffect(() => {
-    let active = true;
-    const performSearch = async () => {
-        if (!query.trim()) {
-            setResults([]);
-            return;
-        }
-        
-        const res = await search(query, { version: selectedVersion });
-        if (active) setResults(res);
-    };
+  const results = useMemo(() => {
+    if (!query.trim()) return [];
     
-    // Debounce could be added here, but for local it's fast
-    const timer = setTimeout(performSearch, 150);
-    return () => {
-        active = false;
-        clearTimeout(timer);
+    let filtered = fuse.search(query).map(r => r.item);
+    
+    if (selectedVersion !== "all") {
+      filtered = filtered.filter(d => d.version === selectedVersion);
     }
-  }, [query, selectedVersion, search]);
-
+    
+    return filtered;
+  }, [query, fuse, selectedVersion]);
 
   if (!query.trim()) return null
 
@@ -151,29 +196,17 @@ function SearchResults({
           <div className="flex-1">
             <div className="font-medium text-sm">{result.title}</div>
             {result.description && <div className="text-xs text-muted-foreground line-clamp-1">{result.description}</div>}
-            {result.keywords && result.keywords.length > 0 && (
+            {Array.isArray(result.keywords) && result.keywords.length > 0 && (
               <div className="flex gap-1 mt-1.5 flex-wrap">
-                {result.keywords
-                  .sort((a, b) => {
-                    const aMatch = a.toLowerCase().includes(query.toLowerCase())
-                    const bMatch = b.toLowerCase().includes(query.toLowerCase())
-                    if (aMatch && !bMatch) return -1
-                    if (!aMatch && bMatch) return 1
-                    return 0
-                  })
-                  .slice(0, 5)
-                  .map((keyword: string) => {
-                    const isMatch = keyword.toLowerCase().includes(query.toLowerCase())
-                    return (
-                      <Badge
-                        key={keyword}
-                        variant={isMatch ? "default" : "secondary"}
-                        className="text-[10px] px-1.5 py-0 leading-none h-4"
-                      >
-                        {keyword}
-                      </Badge>
-                    )
-                  })}
+                {result.keywords.slice(0, 5).map((keyword: string) => (
+                  <Badge
+                    key={keyword}
+                    variant="secondary"
+                    className="text-[10px] px-1.5 py-0 leading-none h-4"
+                  >
+                    {keyword}
+                  </Badge>
+                ))}
               </div>
             )}
           </div>

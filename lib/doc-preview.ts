@@ -1,13 +1,15 @@
 import { notFound } from "next/navigation";
+import { getDoc, getVersions } from "@/core/hooks";
 import { engine } from "@/lib/engine";
 
 export async function validateVersion(version: string) {
-  const versions = await engine.getVersions();
+  const versions = await getVersions();
 
   if (!versions.includes(version)) {
     notFound();
   }
 
+  console.log("version by engine:", versions)
   return versions;
 }
 
@@ -19,7 +21,7 @@ export async function resolveDoc(
     return null;
   }
 
-  const doc = await engine.getDoc(version, slug);
+  const doc = await getDoc(version, slug);
 
   if (!doc) {
     notFound();

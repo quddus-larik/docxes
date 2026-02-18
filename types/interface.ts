@@ -1,6 +1,8 @@
 import type { DocSidebarStyles } from "@/components/doc-sidebar";
 import type { DocNavItem, DocHeading, DocPaginationStyles, DocTOCStyles } from "@/core/engine";
 
+export type { DocSidebarStyles, DocNavItem, DocHeading, DocPaginationStyles, DocTOCStyles };
+
 export interface SidebarProps {
   items: DocNavItem[];
   versions: string[];
@@ -42,7 +44,9 @@ export interface XMetaConfig {
   description: string;
   siteUrl: string;
   documentsPath: string;
-  searchProvider: string;
+  search?: {
+    enabled?: boolean;
+  };
   theme: {
     mdx?: {
       highlighter?: string;
@@ -83,19 +87,3 @@ export interface XMetaConfig {
 }
 
 export interface XMetaInterface extends XMetaConfig {}
-
-export interface DocTOCStyles {
-  container?: string;
-  nav?: string;
-  title?: string;
-  item?: string;
-  itemActive?: string;
-}
-
-export interface DocPaginationStyles {
-  container?: string;
-  button?: string;
-  prevLabel?: string;
-  nextLabel?: string;
-  title?: string;
-}

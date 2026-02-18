@@ -2,21 +2,22 @@
 
 import * as React from "react";
 import { ThemeProvider as NextThemesProvider } from "next-themes";
-import { SearchProvider } from "@/components/search-context";
 import { SidebarCacheProvider } from "@/lib/sidebar-cache-context";
 
 import { SidebarProvider } from "@/components/sidebar-context";
+import { DocxesFrameworkProvider } from "@/core/framework";
+import { NextFramework } from "@/core/next-framework";
 
 export function Providers({ children, ...props }: React.ComponentProps<typeof NextThemesProvider>) {
   return (
     <NextThemesProvider {...props}>
-      <SidebarCacheProvider>
-        <SidebarProvider>
-          <SearchProvider>
+      <DocxesFrameworkProvider framework={NextFramework}>
+        <SidebarCacheProvider>
+          <SidebarProvider>
             {children}
-          </SearchProvider>
-        </SidebarProvider>
-      </SidebarCacheProvider>
+          </SidebarProvider>
+        </SidebarCacheProvider>
+      </DocxesFrameworkProvider>
     </NextThemesProvider>
   );
 }

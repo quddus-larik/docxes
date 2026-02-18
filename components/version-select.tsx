@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { useRouter } from "next/navigation"
+import { useFramework } from "@/core/framework"
 import { cn } from "@/lib/utils"
 import {
   Select,
@@ -23,6 +23,7 @@ export function VersionSelect({
   currentVersion, 
   className,
 }: VersionSelectProps) {
+  const { useRouter } = useFramework()
   const router = useRouter()
 
   return (

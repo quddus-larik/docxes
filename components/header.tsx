@@ -1,8 +1,6 @@
 "use client"
 
 import React from "react"
-import Link from "next/link"
-import { useParams, useRouter, usePathname } from "next/navigation"
 import { SearchDialog } from "./search-dialog"
 import { PanelLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -10,6 +8,7 @@ import { useSidebar } from "./sidebar-context"
 import { cn } from "@/lib/utils"
 import { XMeta } from "@/x-meta.config"
 import { HeaderProps } from "@/types/interface"
+import { useFramework } from "@/core/framework"
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -50,6 +49,7 @@ function ListItem({
   href,
   ...props
 }: React.ComponentPropsWithoutRef<"li"> & { href: string }) {
+  const { Link } = useFramework();
   return (
     <li {...props}>
       <NavigationMenuLink asChild>
@@ -68,6 +68,7 @@ function ListItem({
 export function Header({ siteName, className, versions }: HeaderProps) {
   const { toggle } = useSidebar();
   const ModeToggle = XMeta.modeToggle;
+  const { Link, useRouter, useParams, usePathname } = useFramework();
   const params = useParams();
   const router = useRouter();
   const pathname = usePathname();
@@ -113,39 +114,11 @@ export function Header({ siteName, className, versions }: HeaderProps) {
           <NavigationMenu className="hidden md:flex">
             <NavigationMenuList>
               <NavigationMenuItem>
-                <NavigationMenuTrigger className="bg-transparent">Getting started</NavigationMenuTrigger>
-                <NavigationMenuContent>
-                  <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px]">
-                    <ListItem href={`/docs/${currentVersion}/getting-started/introduction`} title="Introduction">
-                      Learn about DocXes, the modern documentation framework.
-                    </ListItem>
-                    <ListItem href={`/docs/${currentVersion}/getting-started/installation`} title="Quick Start">
-                      Get up and running with your own documentation in minutes.
-                    </ListItem>
-                    <ListItem href={`/docs/${currentVersion}/core-concepts/architecture`} title="Architecture">
-                      Understand how DocXes works under the hood.
-                    </ListItem>
-                    <ListItem href={`/docs/${currentVersion}/core-concepts/routing`} title="Routing">
-                      Learn about file-system routing and versioning.
-                    </ListItem>
-                  </ul>
-                </NavigationMenuContent>
-              </NavigationMenuItem>
-              <NavigationMenuItem>
-                <NavigationMenuTrigger className="bg-transparent">Guides</NavigationMenuTrigger>
-                <NavigationMenuContent>
-                  <ul className="grid w-100 gap-3 p-4 md:w-125 md:grid-cols-2 lg:w-150">
-                    {components.map((component) => (
-                      <ListItem
-                        key={component.title}
-                        title={component.title}
-                        href={component.href.replace('v1', currentVersion)}
-                      >
-                        {component.description}
-                      </ListItem>
-                    ))}
-                  </ul>
-                </NavigationMenuContent>
+                <NavigationMenuLink asChild className={cn(navigationMenuTriggerStyle(), "bg-transparent")}>
+                  <Link href="/docs/v1/features">
+                    Features
+                  </Link>
+                </NavigationMenuLink>
               </NavigationMenuItem>
               <NavigationMenuItem>
                 <NavigationMenuLink asChild className={cn(navigationMenuTriggerStyle(), "bg-transparent")}>
@@ -159,13 +132,17 @@ export function Header({ siteName, className, versions }: HeaderProps) {
         </div>
 
         <div className="flex items-center gap-4">
-          <div className="hidden sm:block w-full max-w-[300px] lg:max-w-[400px]">
-            <SearchDialog />
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="sm:hidden">
-              <SearchDialog />
+          {XMeta.search?.enabled !== false && (
+            <div className="hidden sm:block w-full max-w-[300px] lg:max-w-[400px]">
+              <SearchDialog versions={versions} />
             </div>
+          )}
+          <div className="flex items-center gap-2">
+            {XMeta.search?.enabled !== false && (
+              <div className="sm:hidden">
+                <SearchDialog versions={versions} />
+              </div>
+            )}
             {ModeToggle && <ModeToggle />}
           </div>
         </div>

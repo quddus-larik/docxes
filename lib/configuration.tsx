@@ -13,7 +13,9 @@ const defaults: XMetaConfig = {
   description: "A dynamic documentation generator framework",
   siteUrl: "http://localhost:3000",
   documentsPath: "content/docs",
-  searchProvider: "local",
+  search: {
+    enabled: true,
+  },
   theme: {
     mdx: {
       highlighter: "pretty-code",
@@ -49,6 +51,7 @@ export const createConfig = (overrides: Partial<XMetaConfig> = {}): XMetaConfig 
   return {
     ...defaults,
     ...overrides,
+    search: { ...defaults.search, ...overrides.search },
     theme: { ...defaults.theme, ...overrides.theme },
     sidebar: { ...defaults.sidebar, ...overrides.sidebar },
     toc: { ...defaults.toc, ...overrides.toc },

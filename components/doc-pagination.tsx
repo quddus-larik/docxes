@@ -1,10 +1,10 @@
 "use client"
 
-import Link from "next/link"
 import { ArrowLeft, ArrowRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 import { cn } from "@/lib/utils"
+import { useFramework } from "@/core/framework"
 import type { DocPaginationStyles } from "@/types/interface"
 
 interface DocPaginationProps {
@@ -27,6 +27,7 @@ export function DocPagination({
   styles = {},
 }: DocPaginationProps) {
   const s = { ...defaultStyles, ...styles };
+  const { Link } = useFramework();
   
   return (
     <nav className={s.container} aria-label="Pagination">

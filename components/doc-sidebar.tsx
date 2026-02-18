@@ -1,19 +1,10 @@
 "use client"
 
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { ChevronDown, Menu, X } from "lucide-react";
 import type { DocNavItem } from "@/core/engine";
 import { useDocSidebar } from "@/hooks/useSidebar";
 import { cn } from "@/lib/utils";
+import { useFramework } from "@/core/framework";
 
 export interface DocSidebarStyles {
   sidebar?: string;
@@ -65,6 +56,7 @@ export function DocSidebar({
   footer,
 }: DocSidebarProps) {
   const s = { ...defaultStyles, ...styles };
+  const { Link, useRouter } = useFramework();
   const router = useRouter();
 
   const {

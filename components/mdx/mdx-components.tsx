@@ -19,7 +19,12 @@ import {
   TableHead,
   TableCell,
 } from "@/components/ui/table";
-import { Step, StepsWithCounter, StepsConnected, CodeStep } from "@/components/mdx/mdx-steps";
+import {
+  Step,
+  StepsWithCounter,
+  StepsConnected,
+  CodeStep,
+} from "@/components/mdx/mdx-steps";
 
 function getText(children: React.ReactNode | any): string {
   if (typeof children === "string") return children;
@@ -72,7 +77,8 @@ export const mdxComponents = {
         href={href}
         className={cn(
           "font-medium text-primary underline underline-offset-4 decoration-primary/30 transition-all hover:decoration-primary hover:text-primary/80",
-          isExternal && "after:content-['↗'] after:ml-0.5 after:text-[0.8em] after:no-underline"
+          isExternal &&
+            "after:content-['↗'] after:ml-0.5 after:text-[0.8em] after:no-underline",
         )}
         {...props}
       >
@@ -104,17 +110,29 @@ export const mdxComponents = {
   ),
 
   pre: (props: any) => {
-  return <CodeBlock {...props} />;
-},
+    return <CodeBlock {...props} />;
+  },
+
+  img: (props: any) => {
+    return (
+      <div className="w-full bg-muted rounded-md">
+        <img
+          src={props.src}
+          alt={props.alt || ""}
+          layout="responsive"
+          className="w-full"
+          {...props}
+        />
+        <span className="px-2 font-semibold">{props.alt}</span>
+      </div>
+    );
+  },
 
   code: ({ className, ...props }: any) => {
     // single line
     if (!className) {
       return (
-        <code
-          className="rounded bg-muted px-1 py-0.5 text-sm"
-          {...props}
-        />
+        <code className="rounded bg-muted px-1 py-0.5 text-sm" {...props} />
       );
     }
 
@@ -180,7 +198,6 @@ export const mdxComponents = {
         className: "border-red-200 bg-red-50 dark:bg-red-950",
       },
     }[type];
-
 
     return (
       <Alert className={cn("my-6", style.className)}>
