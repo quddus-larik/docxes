@@ -6,7 +6,7 @@ import { compile } from "./compiler";
 import { generateTOC } from "./ast/toc";
 import { PluginSystem } from "./plugins/plugin-system";
 import { CacheManager } from "./cache/cache-manager";
-import { EngineConfig, DocxesOutput, NavItem, SearchResult } from "./types";
+import { EngineConfig, DocxesOutput, NavItem, SearchResult, Manifest } from "./types";
 import { DocFile } from "./types";
 
 export class DocxesEngine {
@@ -14,12 +14,35 @@ export class DocxesEngine {
   private cache: CacheManager;
   private config: EngineConfig;
   private docsDir: string;
+  private manifest: Manifest | null = null;
+  private manifestPath: string;
 
   constructor(config: EngineConfig = {}) {
     this.config = config;
     this.pluginSystem = new PluginSystem(config.plugins || []);
     this.cache = new CacheManager();
     this.docsDir = path.resolve(process.cwd(), config.documentsPath || "content/docs");
+    this.manifestPath = path.resolve(process.cwd(), ".docxes/manifest.json");
+    
+    // In production, try to load the manifest immediately
+    if (process.env.NODE_ENV === "production") {
+      this.loadManifestSync();
+    }
+  }
+
+  private loadManifestSync(): void {
+    try {
+      // We use a sync check or similar if needed, but for now we'll just try to load it
+      // In a real serverless env, we might want to ensure this is loaded once
+      const fsSync = require('node:fs');
+      if (fsSync.existsSync(this.manifestPath)) {
+        const data = fsSync.readFileSync(this.manifestPath, 'utf-8');
+        this.manifest = JSON.parse(data);
+        console.log("[DocxesEngine] Production manifest loaded successfully.");
+      }
+    } catch (e) {
+      console.warn("[DocxesEngine] Failed to load production manifest:", e);
+    }
   }
 
   private isHidden(name: string): boolean {
@@ -38,49 +61,83 @@ export class DocxesEngine {
   async build(): Promise<void> {
     console.log("[DocxesEngine] Starting pre-compilation build...");
     const versions = await this.getVersions();
+    const manifest: Manifest = {
+      versions,
+      navigation: {},
+      docs: {},
+      searchIndex: [],
+      generatedAt: new Date().toISOString(),
+    };
     
     // Process versions concurrently
     await Promise.all(versions.map(async (version) => {
       console.log(`[DocxesEngine] Processing version: ${version}`);
 
       const versionDir = path.join(this.docsDir, version);
+      
+      // Build navigation for this version
+      manifest.navigation[version] = await this.getNavigation(version);
+
       const walkAndBuild = async (dir: string, slugs: string[] = []) => {
         const entries = await fs.readdir(dir);
-        const processingPromises: Promise<any>[] = []; // Collect promises here
+        const processingPromises: Promise<any>[] = [];
 
         for (const entry of entries) {
           if (this.isHidden(entry)) continue;
           const fullPath = path.join(dir, entry);
           const stat = await fs.stat(fullPath);
           const name = entry.replace(/\.(mdx|md)$/, "");
+          const currentSlugs = [...slugs, name];
           
           if (stat.isDirectory()) {
-            // Process directory's main file and then walk sub-directory concurrently
             processingPromises.push(
               (async () => {
-                await this.getDoc(version, [...slugs, name]);
-                await walkAndBuild(fullPath, [...slugs, name]);
+                const doc = await this.getDoc(version, currentSlugs);
+                if (doc) manifest.docs[`${version}/${currentSlugs.join("/")}`] = doc;
+                await walkAndBuild(fullPath, currentSlugs);
               })()
             );
           } else if (entry.endsWith(".md") || entry.endsWith(".mdx")) {
             if (name !== "main" && name !== "index") {
-              processingPromises.push(this.getDoc(version, [...slugs, name]));
+              processingPromises.push(
+                (async () => {
+                  const doc = await this.getDoc(version, currentSlugs);
+                  if (doc) manifest.docs[`${version}/${currentSlugs.join("/")}`] = doc;
+                })()
+              );
             }
           }
         }
-        await Promise.all(processingPromises); // Wait for all docs/sub-dirs in this level to finish
+        await Promise.all(processingPromises);
       };
 
-      await walkAndBuild(versionDir); // Wait for all docs in this version to finish
-    })); // End Promise.all for versions
+      await walkAndBuild(versionDir);
+    }));
 
-    // Pre-generate search index to cache the plainText
-    await this.getSearchIndex();
+    // Generate search index
+    manifest.searchIndex = await this.getSearchIndex();
     
-    console.log("[DocxesEngine] Build complete! Cache populated in .docxes/");
+    // Ensure .docxes directory exists
+    const docxesDir = path.dirname(this.manifestPath);
+    if (!(await this.fileExists(docxesDir))) {
+      await fs.mkdir(docxesDir, { recursive: true });
+    }
+
+    // Write manifest
+    await fs.writeFile(this.manifestPath, JSON.stringify(manifest, null, 2));
+    this.manifest = manifest;
+
+    // Export public search index for static environments
+    const publicSearchPath = path.resolve(process.cwd(), "public/search-index.json");
+    await fs.writeFile(publicSearchPath, JSON.stringify(manifest.searchIndex));
+    
+    console.log(`[DocxesEngine] Build complete! Manifest generated at ${this.manifestPath}`);
+    console.log(`[DocxesEngine] Static search index exported to ${publicSearchPath}`);
   }
 
   async getVersions(): Promise<string[]> {
+    if (this.manifest) return this.manifest.versions;
+
     try {
       const items = await fs.readdir(this.docsDir);
       const versions: string[] = [];
@@ -101,6 +158,10 @@ export class DocxesEngine {
   }
 
   async getAllDocs(version: string): Promise<DocFile[]> {
+    if (this.manifest) {
+      return Object.values(this.manifest.docs).filter(d => d.slug[0] === version || (d.slug.length > 0 && version === this.manifest?.versions[0])); // Simple filter for demo
+    }
+
     const versionDir = path.join(this.docsDir, version);
     if (!(await this.fileExists(versionDir))) return [];
 
@@ -117,7 +178,6 @@ export class DocxesEngine {
         } else if (file.endsWith(".mdx") || file.endsWith(".md")) {
           const fileSlug = file.replace(/\.(mdx?|md)$/, "");
           if (fileSlug !== "main") {
-            // We don't process everything here for performance, just metadata
             docs.push({
               slug: [...slug, fileSlug],
               path: filePath,
@@ -137,6 +197,12 @@ export class DocxesEngine {
   }
 
   async getDoc(version: string, slug: string[]): Promise<DocFile | null> {
+    const cacheKey = `${version}/${slug.join("/")}`;
+    
+    if (this.manifest && this.manifest.docs[cacheKey]) {
+      return this.manifest.docs[cacheKey];
+    }
+
     const fileName = slug[slug.length - 1];
     const dirPath = slug.slice(0, -1).length
       ? path.join(this.docsDir, version, ...slug.slice(0, -1))
@@ -167,7 +233,6 @@ export class DocxesEngine {
       throw new Error(`Failed to read documentation file "${file}": ${e.message}`);
     }
     
-    const cacheKey = `${version}/${slug.join("/")}`;
     const output = await this.process(fileContent, cacheKey);
 
     let keywords = output.metadata.frontmatter?.keywords || [];
@@ -194,6 +259,10 @@ export class DocxesEngine {
   }
 
   async getNavigation(version: string): Promise<NavItem[]> {
+    if (this.manifest && this.manifest.navigation[version]) {
+      return this.manifest.navigation[version];
+    }
+
     console.log(`[DocxesEngine] Building navigation for version: ${version}`);
     const versionDir = path.join(this.docsDir, version);
     if (!(await this.fileExists(versionDir))) return [];
@@ -257,6 +326,10 @@ export class DocxesEngine {
       "content",
     ]
   ): Promise<SearchResult[]> {
+    if (this.manifest) {
+      return this.manifest.searchIndex;
+    }
+
     console.log(`[DocxesEngine] Generating search index...`);
     const versions = await this.getVersions();
     const allDocsPromises: Promise<SearchResult | null>[] = []; // Array to hold promises

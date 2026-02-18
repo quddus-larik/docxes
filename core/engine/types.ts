@@ -1,3 +1,5 @@
+import { ParsedMDX } from "./parser";
+
 export interface Frontmatter {
   title?: string;
   description?: string;
@@ -30,9 +32,9 @@ export type HookHandler<T = any> = (data: T) => T | Promise<T>;
 
 export interface PluginHooks {
   beforeParse?: HookHandler<string>;
-  afterParse?: HookHandler<any>; // AST
-  beforeCompile?: HookHandler<any>; // Transformed AST
-  afterRender?: HookHandler<string>; // HTML/Code
+  afterParse?: HookHandler<ParsedMDX>; // AST
+  beforeCompile?: HookHandler<string>; // Content string before compilation
+  afterRender?: HookHandler<any>; // Compiled MDX (MDXRemoteSerializeResult)
 }
 
 export interface DocxesPlugin {
@@ -50,6 +52,7 @@ export interface EngineConfig {
     theme?: string;
     keepBackground?: boolean;
   };
+  slugify?: (name: string) => string;
 }
 
 export interface NavItem {
@@ -76,10 +79,10 @@ export interface DocFile {
 
 export interface SearchResult {
   id: string;
-  title: string;
+  title?: string;
   description?: string;
   keywords?: string[];
-  content: string;
+  content?: string;
   version: string;
   href: string;
 }
@@ -100,4 +103,12 @@ export interface DocPaginationStyles {
   prevLabel?: string;
   nextLabel?: string;
   title?: string;
+}
+
+export interface Manifest {
+  versions: string[];
+  navigation: Record<string, NavItem[]>;
+  docs: Record<string, DocFile>; // key: version/slug
+  searchIndex: SearchResult[];
+  generatedAt: string;
 }
