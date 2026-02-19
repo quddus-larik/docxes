@@ -15,6 +15,13 @@ import { AlertCircle, Info, CheckCircle2, AlertTriangle } from "lucide-react";
 import { CodeBlock } from "./code-block";
 import { MdxTable } from "./mdx-table";
 import {
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
   Step,
   StepsWithCounter,
   StepsConnected,
@@ -155,6 +162,12 @@ export const mdxComponents = {
 
   figcaption: () => null,
 
+  table: MdxTable,
+  thead: TableHeader,
+  tbody: TableBody,
+  tr: TableRow,
+  th: TableHead,
+  td: TableCell,
   MdxTable,
   Highlight: ({ className, children }: any) => (
     <span className={cn("h-full bg-pink-300",className)}>{children}</span>
