@@ -15,13 +15,6 @@ import { AlertCircle, Info, CheckCircle2, AlertTriangle } from "lucide-react";
 import { CodeBlock } from "./code-block";
 import { MdxTable } from "./mdx-table";
 import {
-  TableHeader,
-  TableBody,
-  TableRow,
-  TableHead,
-  TableCell,
-} from "@/components/ui/table";
-import {
   Step,
   StepsWithCounter,
   StepsConnected,
@@ -132,7 +125,7 @@ export const mdxComponents = {
 
   img: (props: any) => {
     return (
-      <span className="block w-full bg-muted rounded-md overflow-hidden">
+      <span className="block w-full bg-muted rounded-md overflow-hidden my-4">
         <img
           src={props.src}
           alt={props.alt || ""}
@@ -162,14 +155,10 @@ export const mdxComponents = {
 
   figcaption: () => null,
 
-  table: MdxTable,
-  thead: TableHeader,
-  tbody: TableBody,
-  tr: TableRow,
-  th: TableHead,
-  td: TableCell,
-
   MdxTable,
+  Highlight: ({ className, children }: any) => (
+    <span className={cn("h-full bg-pink-300",className)}>{children}</span>
+  ),
 
   MdxCard: ({ title, description, children, variant = "default" }: any) => (
     <Card

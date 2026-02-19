@@ -37,7 +37,7 @@ function Highlight({ text, query }: { text: string; query: string }) {
     <>
       {parts.map((part, i) => 
         part.toLowerCase() === query.toLowerCase() ? (
-          <mark key={i} className="bg-primary/20 text-primary font-semibold px-0.5 rounded-sm">
+          <mark key={i} className="bg-green-100 text-primary font-semibold">
             {part}
           </mark>
         ) : (
@@ -296,7 +296,7 @@ function SearchResults({
           onSelect={() => onNavigate(result.href)}
           className="flex items-start gap-4 p-3.5 rounded-lg group cursor-pointer"
         >
-          <div className="mt-0.5 h-10 w-10 rounded-xl bg-primary/5 flex items-center justify-center shrink-0 group-data-[selected=true]:bg-primary/20 transition-colors border border-transparent group-data-[selected=true]:border-primary/20">
+          <div className="h-10 w-10 rounded-xl bg-primary/5 flex items-center justify-center shrink-0 group-data-[selected=true]:bg-primary/20 transition-colors border border-transparent group-data-[selected=true]:border-primary/20">
             {result.href.includes("features") || result.keywords?.some(k => k.includes("feature")) ? (
               <Sparkles className="h-5 w-5 text-primary" />
             ) : result.href.includes("guide") ? (
@@ -336,8 +336,8 @@ function SearchResults({
             )}
           </div>
           
-          <div className="self-center flex shrink-0 transition-all duration-300 -translate-x-2 opacity-0 group-data-[selected=true]:translate-x-0 group-data-[selected=true]:opacity-100">
-            <div className="h-7 w-7 rounded-full bg-primary flex items-center justify-center shadow-lg shadow-primary/25">
+          <div className="self-start flex shrink-0 transition-all duration-300 -translate-x-2 opacity-0 group-data-[selected=true]:translate-x-0 group-data-[selected=true]:opacity-100">
+            <div className="h-7 w-7 rounded-md bg-primary flex items-center justify-center shadow-lg shadow-primary/25">
               <ArrowRight className="h-3.5 w-3.5 text-primary-foreground" />
             </div>
           </div>
