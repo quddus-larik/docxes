@@ -4,7 +4,7 @@ import { DocxesRenderer } from "@/core/engine/renderer";
 import { mdxComponents } from "@/components/mdx/mdx-components";
 
 interface AppMDXProviderProps {
-  compiled: any;
+  compiled: string;
 }
 
 export function AppMDXProvider({ compiled }: AppMDXProviderProps) {

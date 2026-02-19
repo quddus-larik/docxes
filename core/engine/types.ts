@@ -24,7 +24,7 @@ export interface DocxesMetadata {
 }
 
 export interface DocxesOutput {
-  compiled: any;
+  compiled: string;
   metadata: DocxesMetadata;
 }
 
@@ -34,7 +34,7 @@ export interface PluginHooks {
   beforeParse?: HookHandler<string>;
   afterParse?: HookHandler<ParsedMDX>; // AST
   beforeCompile?: HookHandler<string>; // Content string before compilation
-  afterRender?: HookHandler<any>; // Compiled MDX (MDXRemoteSerializeResult)
+  afterRender?: HookHandler<string>; // Compiled MDX string (xdm function-body)
 }
 
 export interface DocxesPlugin {
@@ -71,7 +71,7 @@ export interface DocFile {
   description?: string;
   order?: number;
   keywords?: string[];
-  content: any; // Compiled MDX
+  content: string; // Compiled MDX string (xdm function-body)
   rawContent: string;
   plainText: string;
   headings: DocHeading[];

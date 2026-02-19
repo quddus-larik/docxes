@@ -182,7 +182,7 @@ export class DocxesEngine {
               slug: [...slug, fileSlug],
               path: filePath,
               title: fileSlug,
-              content: null,
+              content: "",
               rawContent: "",
               plainText: "",
               headings: [],
@@ -378,6 +378,7 @@ export class DocxesEngine {
   }
 
   async process(source: string, key: string): Promise<DocxesOutput> {
+    const CACHE_VERSION = "v2"; // Increment this to force cache invalidation
     // Generate hashes for granular cache invalidation
     const mdxConfigHash = createHash('sha256').update(JSON.stringify(this.config.mdx || {})).digest('hex').slice(0, 8);
     const sourceHash = createHash('sha256').update(source).digest('hex').slice(0, 12);
