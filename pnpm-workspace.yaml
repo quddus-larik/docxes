@@ -1,3 +1,5 @@
 ignoredBuiltDependencies:
+  - deasync
+  - esbuild
   - sharp
   - unrs-resolver
