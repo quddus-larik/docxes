@@ -1,8 +1,11 @@
 # DocXes
 
-**The "Zero-Core" Documentation Framework for Next.js**
+**Documentation Engine for any React App**
+<img width="1280" height="640" alt="docxes-cover" src="https://github.com/user-attachments/assets/65fb9891-7cf4-46f5-b020-2bb4fc4c3766" />
 
-DocXes is a high-performance, developer-first documentation framework built with Next.js (App Router). Unlike traditional documentation tools that lock you into a proprietary core package, DocXes is a **scaffold-first** framework. You clone it, you own it, and you customize it without boundaries.
+
+
+DocXes is a high-performance, developer-first documentation engine built with Typescript. Unlike traditional documentation tools that lock you into a proprietary core package or frameworks, DocXes provide engine that focuses on ease of integration on any **React Framwroks** includes *(NextJS, React Router, AstroJS)* . It should also aim to provide a prebuild standalone for documentations. 
 
 <p align="center">
  <a href="https://github.com/quddus-larik/docxility/stargazers">
