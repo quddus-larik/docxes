@@ -1,6 +1,6 @@
 ---
 title: Features
-description: Docxes Engine provides 10+ features that make itself independent on any React frameworks.
+description: Docxes Engine provides 8 features that make itself independent on any React frameworks.
 keywords: ["latest", "features", "frameworks"]
 order: 2
 ---
@@ -8,46 +8,55 @@ order: 2
 ### Docxes latest features
 The Docxes Engine is a high-performance documentation processor with the following core features:
 
-1. Multi-Version Documentation Support
+1. ##### Multi-Version Documentation Support
    - Version Discovery: Automatically detects versions based on the directory structure in the content folder.
    - Version-Specific Navigation: Generates independent navigation trees for each version.
    - Production Manifest: In production, it can load a pre-built manifest.json for near-instant routing and content
      retrieval.
 
-2. Advanced MDX Processing
-   - Compiler Pipeline: Uses `next-mdx-remote` to transform MDX into serializable output.
-   - Frontmatter Extraction: Built-in support for `gray-matter` to handle page metadata `(title, description, order, etc.)`.
+2. ##### Advanced MDX Processing
+   - Compiler Pipeline: Uses `xdm` to transform MDX into serializable output.
+   - Frontmatter Extraction: Built-in support for `gray-matter` to handle page metadata `(title, description, order, keywords etc.)`.
    - Syntax Highlighting: Integrated `rehype-pretty-code` for beautiful code blocks with theme customization (defaulting to
      `github-dark`).
    - Automatic ID Generation: Uses `rehype-slug` to ensure all headings are linkable.
 
-3. Smart Caching System
+3. ##### Smart Caching System
    - Granular Invalidation: Uses `SHA-256` hashing to track changes in source content, MDX configuration, plugin lists, and
      slugify logic.
    - Persistence: A `CacheManager` stores processed results in a `.docxes` directory to avoid redundant compilations.
 
-4. Extensible Plugin Architecture
+4. ##### Extensible Plugin Architecture
    - Lifecycle Hooks: Provides four strategic hooks for third-party extensions:
    - beforeParse: Modify raw strings before parsing.
    - afterParse: Manipulate the `Markdown AST` or `frontmatter`.
    - beforeCompile: Transform content right before MDX compilation.
    - afterRender: Post-process the compiled output.
 
-5. Automated Content Intelligence
+5. ##### Automated Content Intelligence
    - TOC Generation: A dedicated AST visitor `(ast/toc.ts)` extracts headings to build hierarchical Table of Contents.
    - Search Indexing: Generates a comprehensive search index including `titles, descriptions, keywords, and searchable
      plain-text content`.
    - Automatic Navigation: Infers hierarchy from file paths and respects an order property in frontmatter for manual
      sorting.
 
-6. Developer Tooling (CLI)
+6. ##### Developer Tooling (CLI)
    - Build Command: A binary utility to pre-compile the entire documentation site and export a static search index to
-     public/ folder named `search-index.json` with use of tsx command.
-   - Clean Command: Quickly clears the engine's cache by tsx.
+     public/ folder named `search-index.json` with use of command must before framework build command.
+   - Clean Command: Quickly clears the engine's cache `(old compiled documents)` by tsx.
    - Flexible Config: Supports a custom slugify function and configurable document paths via `x-meta.config.tsx`.
+   - Dev Enviroment: It provide dev mode that Automatically change docs and content on reload site means consumer deosn't need re-build for dev mode. 
 
-7. Content Management
+7. ##### Content Management
    - Hidden Files: Automatically ignores files prefixed with . or containing `.hidden` (e.g., comparison.hidden.mdx).
+   - Hidden Folders: Automatically ignores folders prefixed with . or containing `.hidden` also (e.g., v3-beta.hidden/main.mdx).
    - Flexible Entry Points: Supports both filename.mdx and `folder/main.mdx` patterns.
 
-![Programiz](https://cdn.playground-v2.programiz.com/assets/logos/logo.svg)
+8. ##### Multi Framework Support 
+   - Nextjs: It provide easy nextjs integrations with custom design or also you can you framework + engine provided by lixril.
+   - Vite React / Astro: In SSR support without default apis. it can be done by `express-js` or another backend libraries that provide APIs for access.
+   - Other: It will be support all framework that uses JavaScript/TypeScipt as primary language.
+
+9. ##### Multi Searching Provider Support
+   - FuseJS: It provide fuse.js by default as a search indexing.
+   - FlexSearch: It also enable by using plugin provided by `docxes engine` 

@@ -1,3 +1,5 @@
+"use client";
+
 import * as React from "react";
 import { cn } from "@/lib/utils";
 import {
@@ -96,12 +98,27 @@ export const mdxComponents = {
   em: ({ children }: any) => <em className="italic">{children}</em>,
 
   ul: ({ children }: any) => (
-    <ul className="my-6 ml-6 list-disc space-y-2">{children}</ul>
+    <ul className="my-6 ml-6 list-disc space-y-2">
+      {React.Children.map(children, (child, i) => {
+        if (!React.isValidElement(child)) return child;
+
+        // Stable key: prefer child.props.id/name, fallback to i
+        const stableKey = child.key ?? i;
+
+        return React.cloneElement(child, { key: stableKey } as any);
+      })}
+    </ul>
   ),
   ol: ({ children }: any) => (
-    <ol className="my-6 ml-6 list-decimal space-y-2">{children}</ol>
+    <ol className="my-6 ml-6 list-decimal space-y-2">
+      {React.Children.map(children, (child, i) =>
+        React.isValidElement(child)
+          ? React.cloneElement(child, { key: i } as any)
+          : child,
+      )}
+    </ol>
   ),
-  li: ({ children }: any) => <li>{children}</li>,
+  li: ({ children, ...props }: any) => <li {...props}>{children}</li>,
 
   blockquote: ({ children }: any) => (
     <blockquote className="my-6 border-l-4 pl-6 italic text-muted-foreground">
@@ -115,16 +132,19 @@ export const mdxComponents = {
 
   img: (props: any) => {
     return (
-      <div className="w-full bg-muted rounded-md">
+      <span className="block w-full bg-muted rounded-md overflow-hidden">
         <img
           src={props.src}
           alt={props.alt || ""}
-          layout="responsive"
-          className="w-full"
+          className="w-full h-auto"
           {...props}
         />
-        <span className="px-2 font-semibold">{props.alt}</span>
-      </div>
+        {props.alt && (
+          <span className="block px-2 py-1 font-semibold text-xs text-muted-foreground">
+            {props.alt}
+          </span>
+        )}
+      </span>
     );
   },
 
