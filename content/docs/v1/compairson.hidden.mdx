@@ -1,0 +1,55 @@
+---
+title: Features
+description: Engine features of Docxes whats new
+keywords: ["new", "features", ""]
+order: 2
+---
+
+The Docxes Engine (@core/engine/\*\*) differs from the Nextra Engine primarily in its architectural philosophy: Docxes is
+a "Content-as-Data" processor, whereas Nextra is a "File-to-Page" transformer.
+
+Here is a comparison focused strictly on the processing logic, excluding UI and framework integrations:
+
+1. Processing Philosophy
+
+- Docxes (Manifest-Driven): The engine acts as a standalone compiler that treats documentation as structured data. It
+  proactively "walks" the filesystem to generate a Global Manifest (manifest.json) and a search index. This allows the
+  UI to be entirely decoupled—the engine provides a "Content API" that the frontend simply consumes.
+- Nextra (Loader-Driven): Nextra's processing is traditionally tied to the build-tooling (Webpack/Turbo/Vite). It
+  transforms MDX files into Next.js pages on-the-fly. The "engine" is effectively a set of sophisticated plugins that
+  inject metadata into the module system.
+
+2. The Processing Pipeline
+
+┌─────────┬───────────────────────────────────────────────────────┬────────────────────────────────────────────────────┐
+│ Feature │ Docxes Engine │ Nextra Engine │
+├─────────┼───────────────────────────────────────────────────────┼────────────────────────────────────────────────────┤
+│ Parsing │ Uses gray-matter + remark AST explicitly in a `proce… │ Handled via Webpack/Turbo loaders during the modu… │
+│ **Comp… │ Uses next-mdx-remote/serialize to produce a serializ… │ Compiles MDX into actual React components (JavaSc… │
+│ **TOC/… │ Explicit: Generated during build() and stored in the… │ Implicit: Usually extracted via Remark/Rehype plu… │
+│ Caching │ Internal: Has a dedicated CacheManager that writes t… │ External: Relies on the host framework's (Next.js… │
+│ \*\*Head… │ Yes: The engine can run in a CLI (bin.ts) without a … │ No: Deeply coupled to the Next.js runtime and pag… │
+└─────────┴───────────────────────────────────────────────────────┴────────────────────────────────────────────────────┘
+
+3. Key Technical Differentiators
+
+- Granular Plugin Hooks: Docxes defines explicit lifecycle hooks (beforeParse, afterParse, beforeCompile, afterRender).
+  This is more akin to a compiler like Vite than a static site generator.
+- Search Indexing: Docxes generates a flat, searchable JSON array of the entire documentation set during the build
+  phase. Nextra typically relies on a separate "page map" and often requires client-side execution to build its search
+  index.
+- Data Portability: Because Docxes compiles to serializable JSON (DocxesOutput), the "processed" content can be sent
+  over the wire (API) or stored in a DB. Nextra's output is code (JS), making it harder to use in a "Headless" CMS
+  fashion.
+
+4. Internal Structure Comparison
+
+- Docxes Engine: Orchestrates a linear sequence: Source → AST → Metadata Extraction → Compilation → Caching. It is a
+  pure data-in, data-out machine.
+- Nextra Engine: Orchestrates a tree-based resolution: File Map → Meta.json resolution → Page Layout Injection →
+  MDX-to-JS Transformation. It is a filesystem-to-route machine.
+
+Summary
+The Docxes Engine is built for Headless Documentation. You use it to turn a folder of MDX into a structured JSON
+database that any UI (React, Vue, or even a mobile app) can render. Nextra is a Framework where the processing is the
+"glue" between your files and your Next.js routes.

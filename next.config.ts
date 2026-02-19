@@ -1,12 +1,4 @@
 import type { NextConfig } from "next"
-import createMDX from "@next/mdx"
-
-const withMDX = createMDX({
-  extension: /\.mdx?$/,
-  options: {
-    // jsxImportSource: "@emotion/react",
-  },
-})
 
 const nextConfig: NextConfig = {
   pageExtensions: ["ts", "tsx", "mdx", "md"],
@@ -32,4 +24,4 @@ const nextConfig: NextConfig = {
   },
 }
 
-export default withMDX(nextConfig)
+export default nextConfig;

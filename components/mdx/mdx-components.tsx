@@ -1,3 +1,5 @@
+"use client";
+
 import * as React from "react";
 import { cn } from "@/lib/utils";
 import {
@@ -19,7 +21,12 @@ import {
   TableHead,
   TableCell,
 } from "@/components/ui/table";
-import { Step, StepsWithCounter, StepsConnected, CodeStep } from "@/components/mdx/mdx-steps";
+import {
+  Step,
+  StepsWithCounter,
+  StepsConnected,
+  CodeStep,
+} from "@/components/mdx/mdx-steps";
 
 function getText(children: React.ReactNode | any): string {
   if (typeof children === "string") return children;
@@ -72,7 +79,8 @@ export const mdxComponents = {
         href={href}
         className={cn(
           "font-medium text-primary underline underline-offset-4 decoration-primary/30 transition-all hover:decoration-primary hover:text-primary/80",
-          isExternal && "after:content-['↗'] after:ml-0.5 after:text-[0.8em] after:no-underline"
+          isExternal &&
+            "after:content-['↗'] after:ml-0.5 after:text-[0.8em] after:no-underline",
         )}
         {...props}
       >
@@ -90,12 +98,27 @@ export const mdxComponents = {
   em: ({ children }: any) => <em className="italic">{children}</em>,
 
   ul: ({ children }: any) => (
-    <ul className="my-6 ml-6 list-disc space-y-2">{children}</ul>
+    <ul className="my-6 ml-6 list-disc space-y-2">
+      {React.Children.map(children, (child, i) => {
+        if (!React.isValidElement(child)) return child;
+
+        // Stable key: prefer child.props.id/name, fallback to i
+        const stableKey = child.key ?? i;
+
+        return React.cloneElement(child, { key: stableKey } as any);
+      })}
+    </ul>
   ),
   ol: ({ children }: any) => (
-    <ol className="my-6 ml-6 list-decimal space-y-2">{children}</ol>
+    <ol className="my-6 ml-6 list-decimal space-y-2">
+      {React.Children.map(children, (child, i) =>
+        React.isValidElement(child)
+          ? React.cloneElement(child, { key: i } as any)
+          : child,
+      )}
+    </ol>
   ),
-  li: ({ children }: any) => <li>{children}</li>,
+  li: ({ children, ...props }: any) => <li {...props}>{children}</li>,
 
   blockquote: ({ children }: any) => (
     <blockquote className="my-6 border-l-4 pl-6 italic text-muted-foreground">
@@ -104,17 +127,32 @@ export const mdxComponents = {
   ),
 
   pre: (props: any) => {
-  return <CodeBlock {...props} />;
-},
+    return <CodeBlock {...props} />;
+  },
+
+  img: (props: any) => {
+    return (
+      <span className="block w-full bg-muted rounded-md overflow-hidden">
+        <img
+          src={props.src}
+          alt={props.alt || ""}
+          className="w-full h-auto"
+          {...props}
+        />
+        {props.alt && (
+          <span className="block px-2 py-1 font-semibold text-xs text-muted-foreground">
+            {props.alt}
+          </span>
+        )}
+      </span>
+    );
+  },
 
   code: ({ className, ...props }: any) => {
     // single line
     if (!className) {
       return (
-        <code
-          className="rounded bg-muted px-1 py-0.5 text-sm"
-          {...props}
-        />
+        <code className="rounded bg-muted px-1 py-0.5 text-sm" {...props} />
       );
     }
 
@@ -180,7 +218,6 @@ export const mdxComponents = {
         className: "border-red-200 bg-red-50 dark:bg-red-950",
       },
     }[type];
-
 
     return (
       <Alert className={cn("my-6", style.className)}>

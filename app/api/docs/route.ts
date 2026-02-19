@@ -1,7 +1,6 @@
 import { NextRequest } from "next/server";
-import { generateNavigation, getVersions } from "@/lib/docs";
-import { indexAllDocs } from "@/lib/search-index";
 import { successResponse, errorResponse } from "@/lib/api-response";
+import { getNavigation, getSearchIndex, getVersions } from "@/core/hooks";
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -11,7 +10,7 @@ export async function GET(request: NextRequest) {
   try {
     switch (type) {
       case "structure":
-        const nav = await generateNavigation(version);
+        const nav = await getNavigation(version);
         return successResponse({ nav, version });
         
       case "versions":
@@ -19,7 +18,7 @@ export async function GET(request: NextRequest) {
         return successResponse({ versions });
 
       case "search":
-        const docs = await indexAllDocs();
+        const docs = await getSearchIndex();
         return successResponse({ docs });
 
       default:

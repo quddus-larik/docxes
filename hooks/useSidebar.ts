@@ -1,33 +1,36 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import type { DocNavItem } from "@/types/types";
+import type { DocNavItem } from "@/core/engine";
 import { useSidebarCache } from "@/lib/sidebar-cache-context";
 
 import { useSidebar } from "@/components/sidebar-context";
 
-export function useDocSidebar(version: string, currentPath: string) {
+export function useDocSidebar(version: string, currentPath: string, initialItems?: DocNavItem[], initialVersions?: string[]) {
   const { fetchVersions, fetchNavigation } = useSidebarCache();
   const { open, setOpen } = useSidebar();
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
-  const [items, setItems] = useState<DocNavItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [versions, setVersions] = useState<string[]>([]);
-  const [loadingVersions, setLoadingVersions] = useState(true);
-  const loadedVersionRef = useRef<string | null>(null);
+  const [items, setItems] = useState<DocNavItem[]>(initialItems || []);
+  const [loading, setLoading] = useState(!initialItems);
+  const [versions, setVersions] = useState<string[]>(initialVersions || []);
+  const [loadingVersions, setLoadingVersions] = useState(!initialVersions);
+  const loadedVersionRef = useRef<string | null>(initialItems ? version : null);
 
   // Fetch docs versions
   useEffect(() => {
+    if (initialVersions) return;
     const getVersions = async () => {
       const data = await fetchVersions();
       setVersions(data);
       setLoadingVersions(false);
     };
     getVersions();
-  }, [fetchVersions]);
+  }, [fetchVersions, initialVersions]);
 
   // Fetch navigation items
   useEffect(() => {
+    if (initialItems && loadedVersionRef.current === version) return;
+    
     // Only show loading when switching versions
     if (loadedVersionRef.current !== version) {
       setLoading(true);
@@ -40,7 +43,7 @@ export function useDocSidebar(version: string, currentPath: string) {
       loadedVersionRef.current = version;
     };
     getNavigation();
-  }, [version, fetchNavigation]);
+  }, [version, fetchNavigation, initialItems]);
 
   const toggleExpanded = (id: string) => {
     setExpandedItems((prev) => {

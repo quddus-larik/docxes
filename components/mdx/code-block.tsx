@@ -3,6 +3,7 @@
 import React, { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Copy, Check } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface PreProps extends React.HTMLAttributes<HTMLPreElement> {
   className?: string;
@@ -12,6 +13,7 @@ interface PreProps extends React.HTMLAttributes<HTMLPreElement> {
 export const CodeBlock: React.FC<PreProps> = ({
   className,
   children,
+  style,
   ...props
 }) => {
   const [copied, setCopied] = useState(false);
@@ -19,34 +21,27 @@ export const CodeBlock: React.FC<PreProps> = ({
 
   const handleCopy = () => {
     if (!preRef.current) return;
-
     const text = preRef.current.innerText;
     navigator.clipboard.writeText(text);
-
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
 
   return (
-    <div className="relative w-full rounded-md border bg-muted my-2">
-      {/* Scrollable Area */}
+    <div className="relative w-full rounded-md border my-2 overflow-hidden group">
       <pre
         ref={preRef}
-        className={`
-          max-h-100 overflow-auto
-          whitespace-pre
-          px-4 py-3 text-sm font-mono
-          ${className || ""}
-        `}
+        style={style}
+        className="p-2"
         {...props}
       >
-        <code>{children}</code>
+        {children}
       </pre>
 
       <Button
         size="icon"
         variant="outline"
-        className="absolute top-2 right-2 z-10 h-7 w-7"
+        className="absolute top-2 right-2 z-10 h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
         onClick={handleCopy}
       >
         {copied ? (

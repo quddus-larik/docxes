@@ -1,9 +1,9 @@
 "use client"
 
-import { useEffect, useState, useCallback } from "react"
-import { useRouter } from "next/navigation"
+import * as React from "react"
+import { useEffect, useState, useMemo, useCallback } from "react"
+import { useFramework } from "@/core/framework"
 import {
-  Command,
   CommandDialog,
   CommandEmpty,
   CommandGroup,
@@ -12,20 +12,96 @@ import {
   CommandList,
 } from "@/components/ui/command"
 import { Badge } from "@/components/ui/badge"
-import { useSearch } from "@/components/search-context"
-import { SearchResult } from "@/lib/search/types"
+import { 
+  Search, 
+  FileText, 
+  Hash, 
+  ArrowRight, 
+  Tag, 
+  Layers,
+  ChevronRight,
+  History,
+  FileCode,
+  Sparkles
+} from "lucide-react"
+import type { SearchResult } from "@/core/engine"
+import Fuse from "fuse.js"
+import { cn } from "@/lib/utils"
 
-export function SearchDialog() {
+// Helper to highlight search query in text
+function Highlight({ text, query }: { text: string; query: string }) {
+  if (!query.trim()) return <>{text}</>;
+  
+  const parts = text.split(new RegExp(`(${query})`, "gi"));
+  return (
+    <>
+      {parts.map((part, i) => 
+        part.toLowerCase() === query.toLowerCase() ? (
+          <mark key={i} className="bg-primary/20 text-primary font-semibold px-0.5 rounded-sm">
+            {part}
+          </mark>
+        ) : (
+          part
+        )
+      )}
+    </>
+  );
+}
+
+export function SearchDialog({ versions: initialVersions = [] }: { versions?: string[] }) {
   const [open, setOpen] = useState(false)
   const [selectedVersion, setSelectedVersion] = useState<string | "all">("all")
-  const { search, versions, isReady } = useSearch()
+  const [docs, setDocs] = useState<SearchResult[]>([])
+  const [versions, setVersions] = useState<string[]>(initialVersions)
+  const [loading, setLoading] = useState(true)
+  const [query, setQuery] = useState("")
+  const { useRouter } = useFramework()
   const router = useRouter()
+
+  const initSearch = useCallback(async () => {
+    try {
+      setLoading(true);
+      // Try static index first for speed
+      const staticRes = await fetch("/search-index.json");
+      if (staticRes.ok) {
+        const data = await staticRes.json();
+        setDocs(data);
+        
+        // Load versions
+        const vRes = await fetch("/api/docs?type=versions");
+        if (vRes.ok) {
+          const vData = await vRes.json();
+          if (vData.success) setVersions(vData.data.versions);
+        }
+        return;
+      }
+
+      // API Fallback
+      const [docsRes, versionsRes] = await Promise.all([
+        fetch("/api/docs?type=search").then(r => r.json()),
+        fetch("/api/docs?type=versions").then(r => r.json())
+      ]);
+
+      if (docsRes.success) setDocs(docsRes.data.docs);
+      if (versionsRes.success) setVersions(versionsRes.data.versions);
+    } catch (e) {
+      console.error("Search init error:", e);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (open && docs.length === 0) {
+      initSearch();
+    }
+  }, [open, docs.length, initSearch]);
 
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
       if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
         e.preventDefault()
-        setOpen((open) => !open)
+        setOpen(o => !o)
       }
     }
     document.addEventListener("keydown", down)
@@ -37,147 +113,234 @@ export function SearchDialog() {
     router.push(href)
   }
 
-  // If search provider is not ready, we could show a loading state or nothing
-  // But usually the button should be visible.
-  
   return (
     <>
       <button
         onClick={() => setOpen(true)}
-        className="group relative inline-flex h-10 w-full items-center justify-between rounded-lg border border-input bg-background px-3 py-2 text-sm text-muted-foreground shadow-sm transition-colors hover:bg-accent hover:text-foreground md:w-64 lg:w-96"
-        disabled={!isReady}
+        className={cn(
+          "group relative flex h-10 w-full items-center justify-between rounded-full border border-input bg-muted/50 px-4 py-2 text-sm text-muted-foreground shadow-sm transition-all hover:bg-muted hover:text-foreground hover:ring-2 hover:ring-primary/20 md:w-64 lg:w-80",
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+        )}
       >
-        <span className="hidden lg:inline-flex">Search documentation...</span>
-        <span className="inline-flex lg:hidden">Search...</span>
-        <kbd className="pointer-events-none ml-auto inline-flex h-6 select-none items-center gap-1 rounded border border-muted bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
-          <span className="text-xs">{typeof navigator !== 'undefined' && navigator?.platform?.includes("Mac") ? "⌘" : "Ctrl"}</span>K
+        <div className="flex items-center gap-2">
+          <Search className="h-4 w-4 transition-colors group-hover:text-primary" />
+          <span className="truncate">Search documentation...</span>
+        </div>
+        <kbd className="pointer-events-none hidden select-none items-center gap-1 rounded border border-muted-foreground/30 bg-muted-foreground/10 px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100 sm:inline-flex">
+          <span className="text-xs">{typeof navigator !== 'undefined' && /Mac/i.test(navigator.platform) ? "⌘" : "Ctrl"}</span>K
         </kbd>
       </button>
 
-      <CommandDialog open={open} onOpenChange={setOpen} shouldFilter={false}>
-        <CommandInput placeholder="Search documentation..." />
-        {versions.length > 1 && (
-          <div className="border-b px-2 py-2">
-            <div className="text-xs font-semibold text-muted-foreground mb-2">Version:</div>
-            <div className="flex flex-wrap gap-2">
-              <button
-                onClick={() => setSelectedVersion("all")}
-                className={`px-2 py-1 rounded text-sm ${selectedVersion === "all" ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground hover:bg-secondary/80"}`}
-              >
-                All
-              </button>
-              {versions.map((version) => (
-                <button
-                  key={version}
-                  onClick={() => setSelectedVersion(version)}
-                  className={`px-2 py-1 rounded text-sm ${selectedVersion === version ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground hover:bg-secondary/80"}`}
-                >
-                  {version}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        <CommandList className="max-h-[450px]">
-          <CommandEmpty>No results found.</CommandEmpty>
-          <SearchResults
-            search={search}
-            onNavigate={handleSelect}
-            selectedVersion={selectedVersion}
+      <CommandDialog open={open} onOpenChange={setOpen} shouldFilter={false} className="max-w-2xl overflow-hidden">
+        <div className="flex flex-col h-full overflow-hidden">
+          <CommandInput 
+            placeholder="Search docs, keywords, or topics..." 
+            onValueChange={setQuery}
           />
-        </CommandList>
+          
+          {versions.length > 1 && (
+            <div className="flex items-center gap-2 px-4 py-2 bg-muted/30 border-b overflow-x-auto no-scrollbar">
+              <Layers className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+              <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70 mr-2 shrink-0">Version:</span>
+              <div className="flex gap-1.5 shrink-0">
+                <VersionPill 
+                  label="All Versions" 
+                  active={selectedVersion === "all"} 
+                  onClick={() => setSelectedVersion("all")} 
+                />
+                {versions.map(v => (
+                  <VersionPill 
+                    key={v}
+                    label={v} 
+                    active={selectedVersion === v} 
+                    onClick={() => setSelectedVersion(v)} 
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
+          <CommandList className="flex-1 max-h-[480px]">
+            {loading ? (
+              <div className="flex flex-col items-center justify-center py-20 gap-4">
+                <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                <p className="text-sm text-muted-foreground animate-pulse font-medium text-center px-4">Preparing search index...</p>
+              </div>
+            ) : (
+              <>
+                <CommandEmpty className="py-20 flex flex-col items-center justify-center gap-4">
+                  <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center">
+                    <Search className="h-6 w-6 text-muted-foreground/50" />
+                  </div>
+                  <div className="text-center">
+                    <p className="text-base font-semibold text-foreground">No matches found</p>
+                    <p className="text-sm text-muted-foreground max-w-[250px] mx-auto mt-1">We couldn&apos;t find any results for &quot;{query}&quot;.</p>
+                  </div>
+                </CommandEmpty>
+                <SearchResults
+                  docs={docs}
+                  onNavigate={handleSelect}
+                  selectedVersion={selectedVersion}
+                  query={query}
+                />
+              </>
+            )}
+          </CommandList>
+          
+          <div className="flex items-center justify-between px-4 py-3 bg-muted/20 border-t text-[10px] text-muted-foreground">
+             <div className="flex items-center gap-4">
+               <span className="flex items-center gap-1.5">
+                 <kbd className="px-1 border rounded bg-background">ENTER</kbd> Select
+               </span>
+               <span className="flex items-center gap-1.5">
+                 <kbd className="px-1 border rounded bg-background">ESC</kbd> Close
+               </span>
+             </div>
+             <div className="flex items-center gap-1 opacity-60 hover:opacity-100 transition-opacity">
+               <Sparkles className="h-2.5 w-2.5 text-primary" />
+               Fuzzy search enabled
+             </div>
+          </div>
+        </div>
       </CommandDialog>
     </>
   )
 }
 
+function VersionPill({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      className={cn(
+        "px-2.5 py-0.5 rounded-full text-[11px] font-semibold transition-all duration-200 border",
+        active 
+          ? "bg-primary border-primary text-primary-foreground shadow-sm shadow-primary/20 scale-105" 
+          : "bg-background border-border text-muted-foreground hover:bg-accent hover:text-foreground hover:border-accent-foreground/20"
+      )}
+    >
+      {label}
+    </button>
+  )
+}
+
 function SearchResults({
-  search,
+  docs,
   onNavigate,
   selectedVersion,
+  query,
 }: {
-  search: (query: string, options?: any) => Promise<SearchResult[]>
+  docs: SearchResult[]
   onNavigate: (href: string) => void
   selectedVersion: string
+  query: string
 }) {
-  const [query, setQuery] = useState("")
-  const [results, setResults] = useState<SearchResult[]>([])
+  const fuse = useMemo(() => {
+    return new Fuse(docs, {
+      keys: [
+        { name: 'keywords', weight: 1.0 },
+        { name: 'title', weight: 0.8 },
+        { name: 'description', weight: 0.4 },
+        { name: 'content', weight: 0.2 }
+      ],
+      threshold: 0.35,
+      includeMatches: true,
+      minMatchCharLength: 2,
+      ignoreLocation: true,
+    });
+  }, [docs]);
 
-  useEffect(() => {
-    const input = document.querySelector("[cmdk-input]") as HTMLInputElement
-    if (input) {
-      const handleChange = () => setQuery(input.value)
-      // Initial value
-      setQuery(input.value)
-      
-      input.addEventListener("input", handleChange)
-      return () => input.removeEventListener("input", handleChange)
-    }
-  }, [])
-
-  useEffect(() => {
-    let active = true;
-    const performSearch = async () => {
-        if (!query.trim()) {
-            setResults([]);
-            return;
-        }
-        
-        const res = await search(query, { version: selectedVersion });
-        if (active) setResults(res);
-    };
+  const results = useMemo(() => {
+    if (!query.trim()) return [];
     
-    // Debounce could be added here, but for local it's fast
-    const timer = setTimeout(performSearch, 150);
-    return () => {
-        active = false;
-        clearTimeout(timer);
+    let filtered = fuse.search(query);
+    
+    if (selectedVersion !== "all") {
+      filtered = filtered.filter(r => r.item.version === selectedVersion);
     }
-  }, [query, selectedVersion, search]);
+    
+    return filtered.slice(0, 15);
+  }, [query, fuse, selectedVersion]);
 
-
-  if (!query.trim()) return null
+  if (!query.trim()) {
+     return (
+       <CommandGroup heading="Recent Documentation">
+         {docs.slice(0, 5).map((doc) => (
+           <CommandItem
+             key={doc.id}
+             onSelect={() => onNavigate(doc.href)}
+             className="flex items-center gap-3 p-3 rounded-md cursor-pointer"
+           >
+             <div className="h-8 w-8 rounded-lg bg-muted flex items-center justify-center shrink-0">
+               <History className="h-4 w-4 text-muted-foreground" />
+             </div>
+             <div className="flex flex-col flex-1 min-w-0">
+               <span className="font-medium text-sm truncate">{doc.title}</span>
+               <div className="flex items-center gap-2">
+                 <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-tighter">{doc.version}</span>
+                 {doc.description && <span className="text-[10px] text-muted-foreground/60 truncate">— {doc.description}</span>}
+               </div>
+             </div>
+             <ChevronRight className="h-3 w-3 ml-auto text-muted-foreground/30" />
+           </CommandItem>
+         ))}
+       </CommandGroup>
+     )
+  }
 
   return (
-    <CommandGroup heading={`Results (${results.length})`}>
-      {results.map((result) => (
+    <CommandGroup heading={results.length > 0 ? `Found ${results.length} matches` : ""}>
+      {results.map(({ item: result }) => (
         <CommandItem
           key={result.id}
           value={result.title}
           onSelect={() => onNavigate(result.href)}
-          className="cursor-pointer overflow-hidden"
+          className="flex items-start gap-4 p-3.5 rounded-lg group cursor-pointer"
         >
-          <div className="flex-1">
-            <div className="font-medium text-sm">{result.title}</div>
-            {result.description && <div className="text-xs text-muted-foreground line-clamp-1">{result.description}</div>}
-            {result.keywords && result.keywords.length > 0 && (
-              <div className="flex gap-1 mt-1.5 flex-wrap">
-                {result.keywords
-                  .sort((a, b) => {
-                    const aMatch = a.toLowerCase().includes(query.toLowerCase())
-                    const bMatch = b.toLowerCase().includes(query.toLowerCase())
-                    if (aMatch && !bMatch) return -1
-                    if (!aMatch && bMatch) return 1
-                    return 0
-                  })
-                  .slice(0, 5)
-                  .map((keyword: string) => {
-                    const isMatch = keyword.toLowerCase().includes(query.toLowerCase())
-                    return (
-                      <Badge
-                        key={keyword}
-                        variant={isMatch ? "default" : "secondary"}
-                        className="text-[10px] px-1.5 py-0 leading-none h-4"
-                      >
-                        {keyword}
-                      </Badge>
-                    )
-                  })}
+          <div className="mt-0.5 h-10 w-10 rounded-xl bg-primary/5 flex items-center justify-center shrink-0 group-data-[selected=true]:bg-primary/20 transition-colors border border-transparent group-data-[selected=true]:border-primary/20">
+            {result.href.includes("features") || result.keywords?.some(k => k.includes("feature")) ? (
+              <Sparkles className="h-5 w-5 text-primary" />
+            ) : result.href.includes("guide") ? (
+              <FileCode className="h-5 w-5 text-primary" />
+            ) : (
+              <Tag className="h-5 w-5 text-primary" />
+            )}
+          </div>
+          
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-1">
+              <h4 className="font-semibold text-sm leading-tight text-foreground group-data-[selected=true]:text-primary transition-colors">
+                <Highlight text={result.title || ""} query={query} />
+              </h4>
+              {result.version && (
+                <span className="text-[9px] px-1.5 py-0.5 font-black uppercase bg-muted text-muted-foreground rounded border border-border shrink-0">
+                  {result.version}
+                </span>
+              )}
+            </div>
+            
+            {result.description && (
+              <p className="text-xs text-muted-foreground line-clamp-1 mb-2">
+                <Highlight text={result.description} query={query} />
+              </p>
+            )}
+
+            {Array.isArray(result.keywords) && result.keywords.length > 0 && (
+              <div className="flex flex-wrap gap-1.5">
+                {result.keywords.slice(0, 4).map((keyword: string) => (
+                  <div key={keyword} className="flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-accent/50 text-[9px] font-medium text-accent-foreground border border-transparent group-data-[selected=true]:border-primary/20 transition-colors">
+                    <Hash className="h-2.5 w-2.5 opacity-50" />
+                    <Highlight text={keyword} query={query} />
+                  </div>
+                ))}
               </div>
             )}
           </div>
-          {result.version && <Badge variant="outline" className="ml-2">{result.version}</Badge>}
+          
+          <div className="self-center flex shrink-0 transition-all duration-300 -translate-x-2 opacity-0 group-data-[selected=true]:translate-x-0 group-data-[selected=true]:opacity-100">
+            <div className="h-7 w-7 rounded-full bg-primary flex items-center justify-center shadow-lg shadow-primary/25">
+              <ArrowRight className="h-3.5 w-3.5 text-primary-foreground" />
+            </div>
+          </div>
         </CommandItem>
       ))}
     </CommandGroup>

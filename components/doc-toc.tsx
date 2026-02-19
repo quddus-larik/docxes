@@ -1,11 +1,11 @@
 "use client";
 
-import type { DocHeading } from "@/types/types";
+import type { DocHeading } from "@/core/engine";
 import { useDocTOC } from "@/hooks/useTOC";
 import { TocItem } from "@/hooks/useTOC";
 
 import { cn } from "@/lib/utils";
-import type { DocTOCStyles } from "@/types/interface";
+import type { DocTOCStyles } from "@/core/engine";
 
 interface DocTOCProps {
   headings: DocHeading[];

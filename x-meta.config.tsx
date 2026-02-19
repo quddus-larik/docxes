@@ -1,7 +1,7 @@
 import { ShadcnUI } from "@/marketplace/shadcn-ui";
 import { createConfig } from "@/lib/configuration";
 import { Header } from "./components/header";
-
+import Fuse from "fuse.js";
 
 /**
  * 💡 TIP FOR DEVELOPERS:
@@ -18,11 +18,14 @@ export const XMeta = createConfig({
   ...ShadcnUI, // <-- ACTIVE THEME: SHADCN UI (B/W)
   siteName: "DocXes",
   siteUrl: process.env.NEXT_PUBLIC_SITE_URL || "https://docxes.vercel.app",
-  searchProvider: "flexsearch",
+  search: {
+    enabled: true,
+  },
   theme:{
     mdx:{
       highlighter: "pretty-code",
-      keepBackground: false
+      theme: "github-dark",
+      keepBackground: true
     }
   },
   sidebar: {

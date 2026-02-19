@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
-import { getDoc, getVersions } from "@/lib/docs";
+import { getDoc, getVersions } from "@/core/hooks";
+import { engine } from "@/lib/engine";
 
 export async function validateVersion(version: string) {
   const versions = await getVersions();
@@ -8,6 +9,7 @@ export async function validateVersion(version: string) {
     notFound();
   }
 
+  console.log("version by engine:", versions)
   return versions;
 }
 

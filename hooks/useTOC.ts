@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import type { DocHeading } from "@/types/types";
+import type { DocHeading } from "@/core/engine";
 
 
 export interface TocItem {

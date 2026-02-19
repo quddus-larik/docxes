@@ -1,9 +1,10 @@
-import { generateNavigation, getVersions } from "@/lib/docs";
 import { getPlugin } from "@/lib/plugin-registry";
 import { validateVersion, resolveDoc, getCurrentPath, getPagination } from "@/lib/doc-preview";
 import { generateDocMetadata, generateArticleSchema, generateBreadcrumbSchema } from "@/lib/seo-utils";
+import { getNavigation } from "@/core/hooks";
 import type { Metadata } from "next";
 import { XMeta } from "@/x-meta.config";
+import { engine } from "@/lib/engine";
 
 export interface PageProps {
   params: Promise<{
@@ -46,8 +47,8 @@ export async function useContentData(version: string, slug: string[] = []) {
   await validateVersion(version);
 
   const [navigation, allVersions] = await Promise.all([
-    generateNavigation(version),
-    getVersions(),
+    getNavigation(version),
+    engine.getVersions(),
   ]);
 
   const doc = await resolveDoc(version, slug);
