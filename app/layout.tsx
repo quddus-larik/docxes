@@ -7,6 +7,7 @@ import { ThemeInjector } from "@/components/theme-injector"
 import { engine } from "@/lib/engine"
 import "./globals.css"
 import { Suspense } from "react"
+import { Google_Sans_Code } from "next/font/google"
 
 
 export const metadata: Metadata = {
@@ -115,7 +116,7 @@ export default async function RootLayout({
           }}
         />
       </head>
-      <body className={`font-sans antialiased`}>
+      <body className={`font-google antialiased`}>
         <Providers attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           <ThemeInjector />
           <div className="relative flex min-h-svh flex-col">

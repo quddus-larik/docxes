@@ -28,11 +28,14 @@ export const CodeBlock: React.FC<PreProps> = ({
   };
 
   return (
-    <div className="relative w-full rounded-md border my-2 overflow-hidden group">
+    <div className="relative w-full rounded-md border my-6 overflow-hidden group">
       <pre
         ref={preRef}
+        className={cn(
+          "max-h-[650px] overflow-x-auto py-4 text-sm leading-relaxed inline-1 w-full",
+          className,
+        )}
         style={style}
-        className="p-2"
         {...props}
       >
         {children}
@@ -40,14 +43,14 @@ export const CodeBlock: React.FC<PreProps> = ({
 
       <Button
         size="icon"
-        variant="outline"
-        className="absolute top-2 right-2 z-10 h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
+        variant="ghost"
+        className="absolute top-2 right-2 z-10 h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-muted"
         onClick={handleCopy}
       >
         {copied ? (
           <Check className="w-4 h-4 text-green-500" />
         ) : (
-          <Copy className="w-4 h-4" />
+          <Copy className="w-4 h-4 text-muted-foreground" />
         )}
       </Button>
     </div>

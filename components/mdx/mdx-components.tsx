@@ -1,4 +1,4 @@
-"use client";
+
 
 import * as React from "react";
 import { cn } from "@/lib/utils";
@@ -37,7 +37,7 @@ function getText(children: React.ReactNode | any): string {
   return "";
 }
 
-// Get Headings
+
 const Heading = (Tag: React.ElementType, className: string) => {
   return ({ children, ...props }: any) => {
     const text = getText(children);
@@ -126,8 +126,16 @@ export const mdxComponents = {
     </blockquote>
   ),
 
-  pre: (props: any) => {
-    return <CodeBlock {...props} />;
+  figure: ({ children, ...props }: any) => {
+    return (
+      <figure {...props} className={cn("my-6", props.className)}>
+        {children}
+      </figure>
+    );
+  },
+
+  pre: ({children , ...props}: any) => {
+    return <CodeBlock children={children} {...props} />
   },
 
   img: (props: any) => {

@@ -337,8 +337,8 @@ function SearchResults({
           </div>
           
           <div className="self-start flex shrink-0 transition-all duration-300 -translate-x-2 opacity-0 group-data-[selected=true]:translate-x-0 group-data-[selected=true]:opacity-100">
-            <div className="h-7 w-7 rounded-md bg-primary flex items-center justify-center shadow-lg shadow-primary/25">
-              <ArrowRight className="h-3.5 w-3.5 text-primary-foreground" />
+            <div className="h-7 w-7 rounded-md flex items-center justify-center shadow-primary/25">
+              <ArrowRight className="h-3.5 w-3.5 text-primary" />
             </div>
           </div>
         </CommandItem>

@@ -122,6 +122,29 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground font-google;
+    @apply bg-background text-foreground;
   }
+}
+
+/* Base Code Block Styles (Let Shiki handle colors) */
+pre.shiki {
+  padding: 1.25rem 0;
+  margin: 0;
+  overflow-x: auto;
+}
+
+pre.shiki code {
+  display: grid;
+  min-width: 100%;
+  font-size: 0.875rem;
+  line-height: 1.5rem;
+}
+
+.shiki span {
+  /* Ensure token colors are preserved */
+  color: inherit; 
+}
+
+.shiki .line {
+  padding: 0 1.25rem;
 }
