@@ -1,7 +1,6 @@
 import { ShadcnUI } from "@/marketplace/shadcn-ui";
 import { createConfig } from "@/lib/configuration";
 import { Header } from "./components/header";
-import Fuse from "fuse.js";
 
 /**
  * 💡 TIP FOR DEVELOPERS:
@@ -23,9 +22,12 @@ export const XMeta = createConfig({
   },
   theme:{
     mdx:{
-      highlighter: "pretty-code",
-      theme: "github-dark",
-      keepBackground: true
+      highlighter: "shiki",
+      themes: {
+        light: "github-light",
+        dark: "github-dark",
+      },
+      keepBackground: false
     }
   },
   sidebar: {
