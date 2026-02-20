@@ -115,14 +115,14 @@ export function Header({ siteName, className, versions }: HeaderProps) {
             <NavigationMenuList>
               <NavigationMenuItem>
                 <NavigationMenuLink asChild className={cn(navigationMenuTriggerStyle(), "bg-transparent")}>
-                  <Link href="/docs/v1/features">
+                  <Link href="/docs/latest/features">
                     Features
                   </Link>
                 </NavigationMenuLink>
               </NavigationMenuItem>
               <NavigationMenuItem>
                 <NavigationMenuLink asChild className={cn(navigationMenuTriggerStyle(), "bg-transparent")}>
-                  <Link href="/docs">
+                  <Link href="/docs/latest">
                     Docs
                   </Link>
                 </NavigationMenuLink>
