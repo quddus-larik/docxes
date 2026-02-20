@@ -28,7 +28,6 @@ export async function compile(content: string, options: any = {}) {
       stripPosition,
       captureHast,
     ],
-    outputFormat: "mdast",
   });
 
   await processor.process(content);
