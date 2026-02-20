@@ -126,25 +126,34 @@
   }
 }
 
-/* Base Code Block Styles (Let Shiki handle colors) */
-pre.shiki {
-  padding: 1.25rem 0;
-  margin: 0;
+/* Shiki Theme Support */
+.shiki {
+  padding: 1rem;
   overflow-x: auto;
+  border-radius: var(--radius-md);
+  background-color: var(--shiki-light-bg) !important;
 }
 
-pre.shiki code {
+.dark .shiki {
+  background-color: var(--shiki-dark-bg) !important;
+}
+
+.shiki code {
   display: grid;
-  min-width: 100%;
   font-size: 0.875rem;
-  line-height: 1.5rem;
+  line-height: 1.6;
 }
 
 .shiki span {
-  /* Ensure token colors are preserved */
-  color: inherit; 
+  /* Default to light mode (inline color) */
+}
+
+.dark .shiki span {
+  /* Switch to dark mode color from CSS variable */
+  color: var(--shiki-dark) !important;
 }
 
 .shiki .line {
-  padding: 0 1.25rem;
+  padding: 0 1rem;
 }
+

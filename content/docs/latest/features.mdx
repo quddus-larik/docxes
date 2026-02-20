@@ -16,12 +16,10 @@ The Docxes Engine is a high-performance documentation processor with the followi
 
 2. ##### Advanced MDX Processing
    - Compiler Pipeline: Uses `xdm` to transform MDX into serializable output.
-   - Frontmatter Extraction: Built-in support for `gray-matter` to handle page metadata `(title, description, order, keywords etc.)`.
-   - Syntax Highlighting: Integrated `rehype-pretty-code` for beautiful code blocks with theme customization (defaulting to
-     `github-dark`).
-   - Automatic ID Generation: Uses `rehype-slug` to ensure all headings are linkable.
-
-3. ##### Smart Caching System
+       - Frontmatter Extraction: Built-in support for `gray-matter` to handle page metadata `(title, description, order, keywords etc.)`.
+       - Syntax Highlighting: Integrated `shikijs/rehype` for beautiful code blocks with theme customization (defaulting to dual themes for light/dark modes).
+       - Automatic ID Generation: Uses `rehype-slug` to ensure all headings are linkable.
+   3. ##### Smart Caching System
    - Granular Invalidation: Uses `SHA-256` hashing to track changes in source content, MDX configuration, plugin lists, and
      slugify logic.
    - Persistence: A `CacheManager` stores processed results in a `.docxes` directory to avoid redundant compilations.

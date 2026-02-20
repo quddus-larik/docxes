@@ -32,7 +32,7 @@ export const CodeBlock: React.FC<PreProps> = ({
       <pre
         ref={preRef}
         className={cn(
-          "max-h-[650px] overflow-x-auto py-4 text-sm leading-relaxed inline-1 w-full",
+          "max-h-[650px] overflow-x-auto py-3 text-sm leading-relaxed w-full px-2",
           className,
         )}
         style={style}
