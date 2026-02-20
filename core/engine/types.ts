@@ -34,7 +34,7 @@ export interface PluginHooks {
   beforeParse?: HookHandler<string>;
   afterParse?: HookHandler<ParsedMDX>; // AST
   beforeCompile?: HookHandler<string>; // Content string before compilation
-  afterRender?: HookHandler<string>; // Compiled MDX string (xdm function-body)
+  afterRender?: HookHandler<string>; // Compiled HAST JSON string
 }
 
 export interface DocxesPlugin {
@@ -47,13 +47,16 @@ export interface EngineConfig {
   components?: Record<string, any>;
   theme?: string;
   documentsPath?: string;
-  mdx?: {
-    highlighter?: string;
-    theme?: string;
-    keepBackground?: boolean;
-  };
+    mdx?: {
+      highlighter?: string;
+      theme?: string | { light?: string; dark?: string };
+      themes?: { light?: string, dark?: string };
+      keepBackground?: boolean;
+    };
+  
   slugify?: (name: string) => string;
 }
+
 
 export interface NavItem {
   title: string;
@@ -71,7 +74,7 @@ export interface DocFile {
   description?: string;
   order?: number;
   keywords?: string[];
-  content: string; // Compiled MDX string (xdm function-body)
+  content: string; // Compiled HAST JSON string
   rawContent: string;
   plainText: string;
   headings: DocHeading[];

@@ -50,8 +50,11 @@ export interface XMetaConfig {
   theme: {
     mdx?: {
       highlighter?: string;
-      theme?: string;
+      theme?: string | { light?: string, dark?: string };
+      themes?: { light?: string, dark?: string };
       keepBackground?: boolean;
+      remarkPlugins?: any[];
+      rehypePlugins?: any[];
     };
     cssVars?: {
       light?: Record<string, string>;

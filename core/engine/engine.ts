@@ -419,6 +419,7 @@ export class DocxesEngine {
       // 5. Compile
       let compiled = await compile(preCompiledContent, {
         mdx: this.config.mdx,
+        
       });
 
       // 5a. Hook: afterRender
