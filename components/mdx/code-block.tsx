@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 interface PreProps extends React.HTMLAttributes<HTMLPreElement> {
   className?: string;
   children: React.ReactNode;
+  "data-language"?: string; 
 }
 
 export const CodeBlock: React.FC<PreProps> = ({
