@@ -22,7 +22,7 @@ export const XMeta = createConfig({
   },
   theme:{
     mdx:{
-      highlighter: "shiki",
+      highlighter: "rehype-pretty-code",
       themes: {
         light: "github-light",
         dark: "github-dark",

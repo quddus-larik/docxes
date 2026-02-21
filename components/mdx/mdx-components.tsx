@@ -90,7 +90,7 @@ export const mdxComponents = {
   },
 
   p: ({ children }: any) => (
-    <p className="leading-7 not-first:mt-2">{children}</p>
+    <div className="leading-7 [&:not(:first-child)]:mt-6 mb-4">{children}</div>
   ),
   strong: ({ children }: any) => (
     <strong className="font-semibold">{children}</strong>
@@ -135,7 +135,11 @@ export const mdxComponents = {
   },
 
   pre: ({children , ...props}: any) => {
-    return <CodeBlock children={children} {...props} />
+    return (
+      <div className="not-prose">
+        <CodeBlock children={children} {...props} />
+      </div>
+    );
   },
 
   img: (props: any) => {
@@ -168,9 +172,23 @@ export const mdxComponents = {
     return <code {...props} />;
   },
 
-  figcaption: () => null,
+  figcaption: (props: any) => (
+    <figcaption
+      {...props}
+      className={cn(
+        "mb-2 mt-4 px-4 py-1 text-sm font-medium text-muted-foreground border-l-2",
+        props.className
+      )}
+    >
+      {props.children}
+    </figcaption>
+  ),
 
-  table: MdxTable,
+  table: (props: any) => (
+    <div className="not-prose my-6">
+      <MdxTable {...props} />
+    </div>
+  ),
   thead: TableHeader,
   tbody: TableBody,
   tr: TableRow,

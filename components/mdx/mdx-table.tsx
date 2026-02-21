@@ -19,7 +19,7 @@ export function MdxTable({ headers, rows, children, ...props }: TableProps) {
   // If headers and rows are provided, render them (custom usage)
   if (headers && rows) {
     return (
-      <div className="my-6 w-full overflow-y-auto rounded-md border border-border">
+      <div className="w-full overflow-y-auto rounded-md border border-border bg-card">
         <Table {...props}>
           <TableHeader>
             <TableRow>
@@ -44,7 +44,7 @@ export function MdxTable({ headers, rows, children, ...props }: TableProps) {
 
   // Otherwise, render children (standard MDX usage)
   return (
-    <div className="my-6 w-full overflow-hidden rounded-md border border-border">
+    <div className="w-full overflow-hidden rounded-md border border-border bg-card">
       <Table {...props} className="min-w-full">
         {children}
       </Table>

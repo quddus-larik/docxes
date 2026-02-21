@@ -126,34 +126,49 @@
   }
 }
 
-/* Shiki Theme Support */
-.shiki {
-  padding: 1rem;
+pre {
   overflow-x: auto;
-  border-radius: var(--radius-md);
-  background-color: var(--shiki-light-bg) !important;
 }
 
-.dark .shiki {
-  background-color: var(--shiki-dark-bg) !important;
+code {
+  font-family: monospace;
 }
 
-.shiki code {
-  display: grid;
-  font-size: 0.875rem;
-  line-height: 1.6;
+/* Rehype Pretty Code Configuration */
+
+/* Style for the code block figure */
+[data-rehype-pretty-code-figure] {
+  @apply my-6;
 }
 
-.shiki span {
-  /* Default to light mode (inline color) */
+/* 
+ * The syntax highlighter (rehype-pretty-code) with dual themes 
+ * injects CSS variables on the spans and pre tags.
+ */
+[data-rehype-pretty-code-figure] code span {
+  color: var(--shiki-light);
 }
 
-.dark .shiki span {
-  /* Switch to dark mode color from CSS variable */
-  color: var(--shiki-dark) !important;
+.dark [data-rehype-pretty-code-figure] code span {
+  color: var(--shiki-dark);
 }
 
-.shiki .line {
-  padding: 0 1rem;
+/* Handle background colors from theme variables */
+[data-rehype-pretty-code-figure] pre {
+  background-color: var(--shiki-light-bg, #fff); /* Fallback to white for light theme */
 }
 
+.dark [data-rehype-pretty-code-figure] pre {
+  background-color: var(--shiki-dark-bg, #0d1117); /* Fallback to GitHub dark bg */
+}
+
+/* Prevent prose from adding quotes to inline code */
+.prose :where(code):not(:where([class~="not-prose"], [class~="not-prose"] *))::before,
+.prose :where(code):not(:where([class~="not-prose"], [class~="not-prose"] *))::after {
+  content: "";
+}
+
+/* Style for the CodeBlock wrapper border */
+.not-prose [data-rehype-pretty-code-figure] > div {
+  @apply border-border;
+}

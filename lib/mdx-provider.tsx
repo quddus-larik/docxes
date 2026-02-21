@@ -4,14 +4,11 @@ import { DocxesRenderer } from "@/core/engine/renderer";
 import { mdxComponents } from "@/components/mdx/mdx-components";
 
 interface AppMDXProviderProps {
-  compiled: string;
+  compiled: any;
 }
 
 export function AppMDXProvider({ compiled }: AppMDXProviderProps) {
   return (
-    <DocxesRenderer
-      compiled={compiled}
-      components={mdxComponents}
-    />
+      <DocxesRenderer code={compiled} components={mdxComponents} />
   );
 }

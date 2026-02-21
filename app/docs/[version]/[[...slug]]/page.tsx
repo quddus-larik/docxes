@@ -59,7 +59,7 @@ export default async function DocsPage({ params }: PageProps) {
                   <article className="prose prose-sm dark:prose-invert max-w-none">
                     <h1 className="text-3xl font-bold mb-2">{meta.title}</h1>
                     {meta.description && (
-                      <p className="text-muted-foreground text-lg mb-8">{meta.description}</p>
+                      <div className="text-muted-foreground text-lg mb-8">{meta.description}</div>
                     )}
                     <AppMDXProvider compiled={meta.content} />
                   </article>
