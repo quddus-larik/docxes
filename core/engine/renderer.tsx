@@ -1,114 +1,78 @@
 "use client";
 
-import React, { useMemo, ReactNode } from "react";
+import React, { useState, useEffect } from "react";
+import * as jsxRuntime from "react/jsx-runtime";
+import { run } from "@mdx-js/mdx";
 
 export interface DocxesRendererProps {
-  compiled: string; // This is now a JSON string of HAST
+  code: string; // The compiled MDX code (function body)
   components?: Record<string, any>;
 }
 
-const VOID_ELEMENTS = new Set([
-  "area", "base", "br", "col", "embed", "hr", "img", "input",
-  "link", "meta", "param", "source", "track", "wbr"
-]);
+export function DocxesRenderer({ code, components = {} }: DocxesRendererProps) {
+  const [Content, setContent] = useState<any>(null);
+  const [error, setError] = useState<string | null>(null);
 
-/**
- * Basic CSS style string to object converter
- */
-function parseStyleString(style: string): React.CSSProperties {
-  const obj: any = {};
-  style.split(";").forEach((pair) => {
-    const [key, value] = pair.split(":");
-    if (key && value) {
-      const camelKey = key.trim().replace(/-([a-z])/g, (g) => g[1].toUpperCase());
-      obj[camelKey] = value.trim();
+  useEffect(() => {
+    let isMounted = true;
+    async function load() {
+      if (!code) return;
+      
+      // Safety check: ensure code is a string
+      if (typeof code !== "string") {
+        console.error("[DocxesRenderer] Expected code string but received:", typeof code);
+        if (isMounted) setError("Invalid MDX code format.");
+        return;
+      }
+
+      try {
+        // MDX run requires Fragment, jsx, and jsxs
+        const { default: MDXContent } = await run(code, {
+          Fragment: jsxRuntime.Fragment,
+          jsx: (jsxRuntime as any).jsx,
+          jsxs: (jsxRuntime as any).jsxs,
+          baseUrl: typeof window !== 'undefined' ? window.location.origin : undefined,
+        });
+        
+        if (isMounted) {
+          setContent(() => MDXContent);
+          setError(null);
+        }
+      } catch (err: any) {
+        console.error("[DocxesRenderer] Error running MDX:", err);
+        if (isMounted) {
+          setError(err.message || String(err));
+        }
+      }
     }
-  });
-  return obj;
-}
+    load();
+    return () => { isMounted = false; };
+  }, [code]);
 
-export function DocxesRenderer({ compiled, components = {} }: DocxesRendererProps) {
-  const content = useMemo(() => {
-    if (!compiled) return null;
+  if (error) {
+    return (
+      <div className="p-4 border border-red-200 bg-red-50 text-red-700 rounded-md">
+        <p className="font-bold">MDX Execution Error:</p>
+        <pre className="mt-2 text-xs overflow-auto whitespace-pre-wrap">{error}</pre>
+        <button 
+          onClick={() => window.location.reload()}
+          className="mt-4 px-3 py-1 bg-red-600 text-white rounded text-xs hover:bg-red-700 transition-colors"
+        >
+          Reload Page
+        </button>
+      </div>
+    );
+  }
 
-    try {
-      const hast = JSON.parse(compiled);
+  if (!Content) {
+    return (
+      <div className="animate-pulse space-y-4 py-4">
+        <div className="h-4 bg-muted rounded w-3/4"></div>
+        <div className="h-4 bg-muted rounded w-1/2"></div>
+        <div className="h-4 bg-muted rounded w-5/6"></div>
+      </div>
+    ); 
+  }
 
-      const renderNode = (node: any, index: number): ReactNode => {
-        if (node.type === "text") {
-          return node.value;
-        }
-
-        if (node.type === "root") {
-          return (
-            <React.Fragment key={index}>
-              {node.children ? node.children.map((child: any, i: number) => renderNode(child, i)) : null}
-            </React.Fragment>
-          );
-        }
-
-        if (node.type === "element") {
-          const { tagName, properties, children } = node;
-          const Tag = components[tagName] || tagName;
-
-          // Convert properties to React-compatible props
-          const props: Record<string, any> = { ...properties };
-          
-          if (props.class) {
-            props.className = Array.isArray(props.class) ? props.class.join(" ") : props.class;
-            delete props.class;
-          }
-
-          if (typeof props.style === "string") {
-            props.style = parseStyleString(props.style);
-          }
-
-          if (VOID_ELEMENTS.has(tagName)) {
-            return <Tag key={index} {...props} />;
-          }
-
-          return (
-            <Tag key={index} {...props}>
-              {children ? children.map((child: any, i: number) => renderNode(child, i)) : null}
-            </Tag>
-          );
-        }
-
-        if (node.type === "mdxJsxFlowElement" || node.type === "mdxJsxTextElement") {
-          const Tag = node.name ? (components[node.name] || node.name) : React.Fragment;
-          const props: Record<string, any> = {};
-          
-          if (node.attributes) {
-            node.attributes.forEach((attr: any) => {
-              if (attr.type === "mdxJsxAttribute") {
-                props[attr.name] = attr.value;
-              }
-            });
-          }
-
-          if (props.class) {
-            props.className = props.class;
-            delete props.class;
-          }
-
-          // MDX components are usually not void elements in MDX
-          return (
-            <Tag key={index} {...props}>
-              {node.children ? node.children.map((child: any, i: number) => renderNode(child, i)) : null}
-            </Tag>
-          );
-        }
-
-        return null;
-      };
-
-      return renderNode(hast, 0);
-    } catch (err) {
-      console.error("Failed to render HAST MDX:", err);
-      return <div className="text-red-500">Error rendering document: {(err as any).message}</div>;
-    }
-  }, [compiled, components]);
-
-  // Use Fragment instead of div to avoid nesting issues if Renderer is used inside another block
-  return <>{content}</>;
+  return <Content components={components} />;
 }

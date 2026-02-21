@@ -1,5 +1,6 @@
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
+import { pathToFileURL } from 'node:url';
 import { createHash } from 'node:crypto'; // Add this import
 import { parse } from "./parser";
 import { compile } from "./compiler";
@@ -59,7 +60,7 @@ export class DocxesEngine {
   }
 
   async build(): Promise<void> {
-    console.log("[DocxesEngine] Starting pre-compilation build...");
+    console.log("[DocxesEngine] Starting scalable pre-compilation build...");
     const versions = await this.getVersions();
     const manifest: Manifest = {
       versions,
@@ -69,6 +70,12 @@ export class DocxesEngine {
       generatedAt: new Date().toISOString(),
     };
     
+    // Ensure .docxes/data directory exists for atomic storage
+    const dataDir = path.resolve(process.cwd(), ".docxes/data");
+    if (!(await this.fileExists(dataDir))) {
+      await fs.mkdir(dataDir, { recursive: true });
+    }
+
     // Process versions concurrently
     await Promise.all(versions.map(async (version) => {
       console.log(`[DocxesEngine] Processing version: ${version}`);
@@ -90,19 +97,31 @@ export class DocxesEngine {
           const currentSlugs = [...slugs, name];
           
           if (stat.isDirectory()) {
-            processingPromises.push(
-              (async () => {
-                const doc = await this.getDoc(version, currentSlugs);
-                if (doc) manifest.docs[`${version}/${currentSlugs.join("/")}`] = doc;
-                await walkAndBuild(fullPath, currentSlugs);
-              })()
-            );
+            processingPromises.push(walkAndBuild(fullPath, currentSlugs));
           } else if (entry.endsWith(".md") || entry.endsWith(".mdx")) {
             if (name !== "main" && name !== "index") {
               processingPromises.push(
                 (async () => {
                   const doc = await this.getDoc(version, currentSlugs);
-                  if (doc) manifest.docs[`${version}/${currentSlugs.join("/")}`] = doc;
+                  if (doc) {
+                    const docKey = `${version}/${currentSlugs.join("/")}`;
+                    const docFilePath = path.join(dataDir, `${docKey}.mjs`);
+                    
+                    // Ensure subdirectories exist in atomic storage
+                    await fs.mkdir(path.dirname(docFilePath), { recursive: true });
+                    
+                    // Save individual doc as an ESM module (Truly "no JSON phase")
+                    const { content, ...metadata } = doc;
+                    const docModule = `
+export const metadata = ${JSON.stringify(metadata, null, 2)};
+export const code = ${JSON.stringify(content)};
+export default { ...metadata, content: code };
+`;
+                    await fs.writeFile(docFilePath, docModule);
+                    
+                    // Keep ONLY metadata in manifest for fast access, EXCLUDE content/rawContent
+                    manifest.docs[docKey] = metadata as any;
+                  }
                 })()
               );
             }
@@ -131,8 +150,8 @@ export class DocxesEngine {
     const publicSearchPath = path.resolve(process.cwd(), "public/search-index.json");
     await fs.writeFile(publicSearchPath, JSON.stringify(manifest.searchIndex));
     
-    console.log(`[DocxesEngine] Build complete! Manifest generated at ${this.manifestPath}`);
-    console.log(`[DocxesEngine] Static search index exported to ${publicSearchPath}`);
+    console.log(`[DocxesEngine] Scalable build complete! Manifest generated at ${this.manifestPath}`);
+    console.log(`[DocxesEngine] Data stored in ${dataDir}`);
   }
 
   async getVersions(): Promise<string[]> {
@@ -197,10 +216,35 @@ export class DocxesEngine {
   }
 
   async getDoc(version: string, slug: string[]): Promise<DocFile | null> {
-    const cacheKey = `${version}/${slug.join("/")}`;
+    const key = `${version}/${slug.join("/")}`;
     
-    if (this.manifest && this.manifest.docs[cacheKey]) {
-      return this.manifest.docs[cacheKey];
+    // 1. Try manifest first (will only have metadata now)
+    if (this.manifest && this.manifest.docs[key] && (this.manifest.docs[key] as any).content) {
+      return this.manifest.docs[key];
+    }
+
+    // 2. Try atomic file system (.docxes/data/...) using dynamic import
+    const atomicPath = path.resolve(process.cwd(), `.docxes/data/${key}.mjs`);
+    if (await this.fileExists(atomicPath)) {
+      try {
+        // Use relative path for Next.js/Turbopack compatibility
+        // The engine is in core/engine/engine.ts, data is in .docxes/data/
+        const relativePath = `../../.docxes/data/${key}.mjs`;
+        const module = await import(relativePath);
+        if (module.default) {
+          console.log(`[DocxesEngine] Cache HIT (mjs): ${key}`);
+          return module.default;
+        }
+      } catch (e) {
+        // If relative import fails, try absolute as fallback
+        try {
+          const fileUrl = pathToFileURL(atomicPath).href;
+          const module = await import(fileUrl);
+          if (module.default) return module.default;
+        } catch (e2) {
+          console.warn(`[DocxesEngine] Failed to import pre-compiled doc "${key}":`, e);
+        }
+      }
     }
 
     const fileName = slug[slug.length - 1];
@@ -233,12 +277,12 @@ export class DocxesEngine {
       throw new Error(`Failed to read documentation file "${file}": ${e.message}`);
     }
     
-    const output = await this.process(fileContent, cacheKey);
+    const output = await this.process(fileContent, key);
 
     let keywords = output.metadata.frontmatter?.keywords || [];
     if (typeof keywords === "string") keywords = keywords.split(",").map((k: string) => k.trim());
 
-    console.log(`[DocxesEngine] Loaded doc: ${version}/${slug.join("/")} (TOC items: ${output.metadata.toc.length})`);
+    console.log(`[DocxesEngine] Loaded doc: ${version}/${slug.join("/")}`);
 
     return {
       slug,
@@ -378,15 +422,14 @@ export class DocxesEngine {
   }
 
   async process(source: string, key: string): Promise<DocxesOutput> {
-    const CACHE_VERSION = "v2"; // Increment this to force cache invalidation
-    // Generate hashes for granular cache invalidation
+    const CACHE_VERSION = "v10"; // Increment for highlighter adjustment
     const mdxConfigHash = createHash('sha256').update(JSON.stringify(this.config.mdx || {})).digest('hex').slice(0, 8);
     const sourceHash = createHash('sha256').update(source).digest('hex').slice(0, 12);
     
     const pluginNamesHash = createHash('sha256').update(JSON.stringify(this.config.plugins?.map(p => p.name) || [])).digest('hex').slice(0, 8);
     const slugifyHash = createHash('sha256').update(this.config.slugify ? 'custom' : 'default').digest('hex').slice(0, 8);
 
-    const fullKey = `${key}_${mdxConfigHash}_${pluginNamesHash}_${slugifyHash}_${sourceHash}`;
+    const fullKey = `${CACHE_VERSION}_${key}_${mdxConfigHash}_${pluginNamesHash}_${slugifyHash}_source_${sourceHash}`;
 
     const cached = await this.cache.get(fullKey);
     if (cached) {

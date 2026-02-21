@@ -1,40 +1,60 @@
-import { createProcessor } from "@mdx-js/mdx";
+import { compile as mdxCompile } from "@mdx-js/mdx";
 import remarkGfm from "remark-gfm";
-import { visit } from "unist-util-visit";
+import rehypeSlug from "rehype-slug";
+import rehypePrettyCode from "rehype-pretty-code";
 
-// ---- strip positions (keeps JSON small)
-function stripPosition() {
-  return (tree: any) => {
-    visit(tree, (node: any) => {
-      delete node.position;
-      if (node.attributes) {
-        node.attributes.forEach((attr: any) => delete attr.position);
-      }
-    });
+export interface CompileOptions {
+  mdx?: {
+    highlighter?: string;
+    theme?: string | { light?: string; dark?: string };
+    themes?: { light?: string; dark?: string };
+    keepBackground?: boolean;
   };
+  highlightCode?: boolean;
+  remarkPlugins?: any[];
+  rehypePlugins?: any[];
 }
 
-export async function compile(content: string, options: any = {}) {
-  let hast: any = null;
+export async function compile(content: string, options: CompileOptions = {}) {
+  const mdxConfig = options.mdx || {};
+  // Check if highlighting should be enabled
+  const shouldHighlight = options.highlightCode !== false && mdxConfig.highlighter !== "none";
 
-  const captureHast = () => (tree: any) => {
-    hast = tree;
-  };
+  const remarkPlugins = [
+    remarkGfm,
+    ...(options.remarkPlugins || [])
+  ];
 
-  const processor = createProcessor({
-    remarkPlugins: [remarkGfm, ...(options.remarkPlugins || [])],
-    rehypePlugins: [
-      ...(options.rehypePlugins || []),
-      stripPosition,
-      captureHast,
-    ],
-  });
+  const rehypePlugins: any[] = [
+    rehypeSlug,
+    ...(options.rehypePlugins || [])
+  ];
 
-  await processor.process(content);
-
-  if (!hast) {
-    throw new Error("Failed to compile MDX to HAST");
+  if (shouldHighlight) {
+    // Default to GitHub themes if not specified
+    const theme = mdxConfig.themes || mdxConfig.theme || {
+      light: "github-light",
+      dark: "github-dark",
+    };
+    
+    rehypePlugins.push([rehypePrettyCode, {
+      theme: theme,
+      keepBackground: mdxConfig.keepBackground ?? false, // Authentically use theme backgrounds
+      grid: false,
+    }]);
   }
 
-  return JSON.stringify(hast);
+  try {
+    const result = await mdxCompile(content, {
+      remarkPlugins,
+      rehypePlugins,
+      outputFormat: 'function-body',
+      development: false, // Ensure consistent output to avoid _jsxDEV mismatch
+    });
+
+    return String(result);
+  } catch (err: any) {
+    console.error("[DocxesCompiler] MDX Compilation Error:", err);
+    throw err;
+  }
 }

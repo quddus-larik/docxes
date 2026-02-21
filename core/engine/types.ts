@@ -24,7 +24,7 @@ export interface DocxesMetadata {
 }
 
 export interface DocxesOutput {
-  compiled: string;
+  compiled: string; // Compiled MDX code
   metadata: DocxesMetadata;
 }
 
@@ -34,7 +34,7 @@ export interface PluginHooks {
   beforeParse?: HookHandler<string>;
   afterParse?: HookHandler<ParsedMDX>; // AST
   beforeCompile?: HookHandler<string>; // Content string before compilation
-  afterRender?: HookHandler<string>; // Compiled HAST JSON string
+  afterRender?: HookHandler<any>; // Compiled HAST JSON string
 }
 
 export interface DocxesPlugin {
@@ -48,7 +48,7 @@ export interface EngineConfig {
   theme?: string;
   documentsPath?: string;
     mdx?: {
-      highlighter?: string;
+      highlighter?: string | "rehype-pretty-code";
       theme?: string | { light?: string; dark?: string };
       themes?: { light?: string, dark?: string };
       keepBackground?: boolean;
@@ -74,7 +74,7 @@ export interface DocFile {
   description?: string;
   order?: number;
   keywords?: string[];
-  content: string; // Compiled HAST JSON string
+  content: string; // Compiled MDX code
   rawContent: string;
   plainText: string;
   headings: DocHeading[];
