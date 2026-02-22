@@ -3,15 +3,16 @@ import { engine } from "@/lib/engine"
 import { XMeta } from "@/x-meta.config"
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const siteUrl = XMeta.sitemap?.siteUrl || XMeta.siteUrl;
   const entries: MetadataRoute.Sitemap = [
     {
-      url: XMeta.siteUrl,
+      url: siteUrl,
       lastModified: new Date(),
       changeFrequency: "weekly",
       priority: 1,
     },
     {
-      url: `${XMeta.siteUrl}/docs`,
+      url: `${siteUrl}/docs`,
       lastModified: new Date(),
       changeFrequency: "weekly",
       priority: 0.9,
@@ -23,7 +24,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   for (const version of versions) {
     // Add version index
     entries.push({
-      url: `${XMeta.siteUrl}/docs/${version}`,
+      url: `${siteUrl}/docs/${version}`,
       lastModified: new Date(),
       changeFrequency: "weekly",
       priority: 0.8,
@@ -33,7 +34,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const docs = await engine.getAllDocs(version)
     for (const doc of docs) {
       entries.push({
-        url: `${XMeta.siteUrl}/docs/${version}/${doc.slug.join("/")}`,
+        url: `${siteUrl}/docs/${version}/${doc.slug.join("/")}`,
         lastModified: new Date(),
         changeFrequency: "monthly",
         priority: 0.7,

@@ -6,6 +6,10 @@ async function main() {
   const engine = new DocxesEngine({
     mdx: XMeta.theme?.mdx,
     documentsPath: XMeta.documentsPath,
+    sitemap: {
+      enabled: XMeta.sitemap?.enabled,
+      siteUrl: XMeta.sitemap?.siteUrl || XMeta.siteUrl,
+    },
   });
 
   const command = process.argv[2];

@@ -55,6 +55,10 @@ export interface EngineConfig {
     };
   
   slugify?: (name: string) => string;
+  sitemap?: {
+    enabled?: boolean;
+    siteUrl?: string;
+  };
 }
 
 

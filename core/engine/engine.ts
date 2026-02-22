@@ -150,8 +150,63 @@ export default { ...metadata, content: code };
     const publicSearchPath = path.resolve(process.cwd(), "public/search-index.json");
     await fs.writeFile(publicSearchPath, JSON.stringify(manifest.searchIndex));
     
+    // Generate sitemap if enabled
+    if (this.config.sitemap?.enabled) {
+      await this.generateSitemap(manifest);
+    }
+    
     console.log(`[DocxesEngine] Scalable build complete! Manifest generated at ${this.manifestPath}`);
     console.log(`[DocxesEngine] Data stored in ${dataDir}`);
+  }
+
+  private async generateSitemap(manifest: Manifest): Promise<void> {
+    console.log("[DocxesEngine] Generating sitemap.xml...");
+    const siteUrl = this.config.sitemap?.siteUrl || "http://localhost:3000";
+    const now = new Date().toISOString();
+
+    let xml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>${siteUrl}</loc>
+    <lastmod>${now}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>${siteUrl}/docs</loc>
+    <lastmod>${now}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>`;
+
+    for (const version of manifest.versions) {
+      // Version index
+      xml += `
+  <url>
+    <loc>${siteUrl}/docs/${version}</loc>
+    <lastmod>${now}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>`;
+
+      // Documents
+      const docs = Object.values(manifest.docs).filter(d => d.slug[0] === version || (d.slug.length > 0 && version === manifest.versions[0]));
+      for (const doc of docs) {
+        xml += `
+  <url>
+    <loc>${siteUrl}/docs/${version}/${doc.slug.join("/")}</loc>
+    <lastmod>${now}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>`;
+      }
+    }
+
+    xml += "\n</urlset>";
+
+    const sitemapPath = path.resolve(process.cwd(), "public/sitemap.xml");
+    await fs.writeFile(sitemapPath, xml);
+    console.log(`[DocxesEngine] Sitemap generated at ${sitemapPath}`);
   }
 
   async getVersions(): Promise<string[]> {

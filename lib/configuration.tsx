@@ -10,8 +10,8 @@ import { VersionSelect } from "@/components/version-select";
 
 const defaults: XMetaConfig = {
   siteName: "DocXes",
-  description: "A dynamic documentation generator framework",
-  siteUrl: "http://localhost:3000",
+  description: "A dynamic documentation engine build with typescript.",
+  siteUrl: "https://docxes.vercel.app",
   documentsPath: "content/docs",
   search: {
     enabled: true,
@@ -46,7 +46,10 @@ const defaults: XMetaConfig = {
   },
   toc: { component: DocTOC, styles: {} },
   pagination: { component: DocPagination, styles: {} },
-  versions: { default: "v1" }
+  versions: { default: "v1" },
+  sitemap: {
+    enabled: true,
+  }
 };
 
 
@@ -60,5 +63,6 @@ export const createConfig = (overrides: Partial<XMetaConfig> = {}): XMetaConfig 
     toc: { ...defaults.toc, ...overrides.toc },
     pagination: { ...defaults.pagination, ...overrides.pagination },
     versions: { ...defaults.versions, ...overrides.versions },
+    sitemap: { ...defaults.sitemap, ...overrides.sitemap },
   };
 };
