@@ -480,7 +480,7 @@ export default { ...metadata, content: code };
   }
 
   async process(source: string, key: string): Promise<DocxesOutput> {
-    const CACHE_VERSION = "v10"; // Increment for highlighter adjustment
+    const CACHE_VERSION = "v1"; // Increment for highlighter adjustment
     const mdxConfigHash = createHash('sha256').update(JSON.stringify(this.config.mdx || {})).digest('hex').slice(0, 8);
     const sourceHash = createHash('sha256').update(source).digest('hex').slice(0, 12);
     
