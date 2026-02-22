@@ -160,16 +160,16 @@ export const mdxComponents = {
     );
   },
 
-  code: ({ className, ...props }: any) => {
-    // single line
-    if (!className) {
-      return (
-        <code className="rounded bg-muted px-1 py-0.5 text-sm" {...props} />
-      );
+  code: ({ className, isCodeBlock, ...props }: any) => {
+    if (isCodeBlock) {
+      return <code className={className} {...props} />;
     }
-
-    // BLOCK code → let <pre> handle it
-    return <code {...props} />;
+    return (
+      <code
+        className={cn("bg-muted rounded px-1 py-0.5 text-sm", className)}
+        {...props}
+      />
+    );
   },
 
   figcaption: (props: any) => (
