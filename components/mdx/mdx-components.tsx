@@ -59,7 +59,6 @@ const Heading = (Tag: React.ElementType, className: string) => {
   };
 };
 
-// MDX Components
 export const mdxComponents = {
   h1: Heading("h1", "mt-8 text-4xl font-bold tracking-tight"),
   h2: Heading(

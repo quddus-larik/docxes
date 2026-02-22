@@ -2,9 +2,9 @@ import { getNavigation, getDoc, getVersions, getSearchIndex } from "@/core/hooks
 
 export default async function Page() {
 
-    const data = await getNavigation("v1");
+    const data = await getNavigation("latest");
+    const docs = await getDoc("latest",["docxes"]);
     const search = await getSearchIndex(["title","description","keywords"]);
-    const docs = await getDoc("v1",["getting-started","installation"]);
 
     console.log("Navigation:", data);
     console.log("Search Indexes:", search);
