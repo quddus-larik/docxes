@@ -1,0 +1,61 @@
+---
+title: Exceptations
+description: The features that will be workable for docxes engine.
+order: 4
+---
+To minimize the learning curve and make integration seamless for developers using Option 2 (Static
+  Build), you should focus on Abstraction and Automation.
+
+  The goal is to make documentation feel like a native part of the React app rather than a separate
+  complex system. Here is how to achieve that:
+
+
+  1. The "Zero-Config" Development Loop
+  Developers hate manual steps. Automate the engine so it feels like "Live Reload":
+   * Automatic Build: Add a script to package.json that runs the engine build automatically before the
+     Vite dev server starts.
+   * File Watching: Use a simple file watcher (like chokidar) in development. When a developer saves an
+     .mdx file, the engine should automatically rebuild the static data in the background. The developer
+     just sees the browser refresh.
+
+
+  2. Provide a "Standard Loader" for React Router
+  Instead of asking developers to write complex fetch logic in every route, provide a single, reusable
+  Loader Function:
+   * Create a docsLoader helper.
+   * In the React Router config, the developer just adds loader: docsLoader.
+   * This loader automatically handles parsing the version and slug from the URL, fetching the correct
+     pre-compiled file from the public folder, and returning the data.
+
+
+  3. The "Drop-in" Layout Component
+  Reduce the UI work to a single component. Instead of making developers manually place the Sidebar,
+  TOC, and Content components, provide a DocLayout component:
+   * The developer simply puts <DocLayout /> inside their route.
+   * The layout automatically pulls data from the docsLoader.
+   * It handles the mapping of the sidebar and TOC internally using the data provided by the engine.
+
+
+  4. Centralized "XMeta" Configuration
+  Keep all "knobs and dials" in one human-readable file (like your existing x-meta.config.tsx):
+   * Developers should never have to touch the @core engine code.
+   * If they want to change the sidebar order, site title, or syntax highlighting theme, they do it in
+     one simple configuration object.
+   * This creates a "Config-over-Code" experience.
+
+
+  5. Standardized "Content" Folder
+  Establish a clear, predictable folder structure (e.g., content/docs/v1/...).
+   * When a developer adds a folder, it automatically becomes a sidebar category.
+   * When they add a file, it becomes a page.
+   * This "Filesystem Routing" is intuitive for anyone who has used Next.js or similar frameworks.
+
+
+  Summary of the Developer Experience:
+   1. Add MDX file to /content.
+   2. Add one route to React Router using the docsLoader.
+   3. Render one component <DocLayout />.
+
+
+  By hiding the complexity of MDX compilation and data fetching behind these abstractions, you allow
+  developers to focus entirely on writing documentation and building their app's unique UI.

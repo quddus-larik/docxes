@@ -2,21 +2,33 @@
 title: Components 
 description: A Comprehensive UI components supported by engine.
 keywords: ["components","ui"]
+order: 3
 ---
 
-### Code Component
+### Tables
 
-```typescript
-function hello(){
-    const a = 56;
-    const b = 4;
-    return a + b;
-}
+```markdown
 
-console.log(hello());
+| Header 1 | Header 2 | Header 3 |
+|---|---|---|
+| Row 1 Col 1 | Row 1 Col 2 | Row 1 Col 3 |
+| Row 2 Col 1 | Row 2 Col 2 | Row 2 Col 3 |
 ```
 
 
-### Inline Code Component
+| Header 1 | Header 2 | Header 3 |
+|---|---|---|
+| Row 1 Col 1 | Row 1 Col 2 | Row 1 Col 3 |
+| Row 2 Col 1 | Row 2 Col 2 | Row 2 Col 3 |
 
-`const a = 189;`
+### Alerts
+
+```markdown
+<MdxAlert type="info" title="Information">
+alert information provided by docxes styled by tailwindcss
+</MdxAlert>
+```
+
+<MdxAlert type="info" title="Information">
+alert information provided by docxes styled by tailwindcss
+</MdxAlert>
