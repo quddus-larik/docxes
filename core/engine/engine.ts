@@ -279,25 +279,28 @@ export default { ...metadata, content: code };
     }
 
     // 2. Try atomic file system (.docxes/data/...) using dynamic import
-    const atomicPath = path.resolve(process.cwd(), `.docxes/data/${key}.mjs`);
-    if (await this.fileExists(atomicPath)) {
-      try {
-        // Use relative path for Next.js/Turbopack compatibility
-        // The engine is in core/engine/engine.ts, data is in .docxes/data/
-        const relativePath = `../../.docxes/data/${key}.mjs`;
-        const module = await import(relativePath);
-        if (module.default) {
-          console.log(`[DocxesEngine] Cache HIT (mjs): ${key}`);
-          return module.default;
-        }
-      } catch (e) {
-        // If relative import fails, try absolute as fallback
+    // In development, we skip the atomic cache to allow for live reloading of content.
+    if (process.env.NODE_ENV !== "development") {
+      const atomicPath = path.resolve(process.cwd(), `.docxes/data/${key}.mjs`);
+      if (await this.fileExists(atomicPath)) {
         try {
-          const fileUrl = pathToFileURL(atomicPath).href;
-          const module = await import(fileUrl);
-          if (module.default) return module.default;
-        } catch (e2) {
-          console.warn(`[DocxesEngine] Failed to import pre-compiled doc "${key}":`, e);
+          // Use relative path for Next.js/Turbopack compatibility
+          // The engine is in core/engine/engine.ts, data is in .docxes/data/
+          const relativePath = `../../.docxes/data/${key}.mjs`;
+          const module = await import(relativePath);
+          if (module.default) {
+            console.log(`[DocxesEngine] Cache HIT (mjs): ${key}`);
+            return module.default;
+          }
+        } catch (e) {
+          // If relative import fails, try absolute as fallback
+          try {
+            const fileUrl = pathToFileURL(atomicPath).href;
+            const module = await import(fileUrl);
+            if (module.default) return module.default;
+          } catch (e2) {
+            console.warn(`[DocxesEngine] Failed to import pre-compiled doc "${key}":`, e);
+          }
         }
       }
     }
@@ -477,7 +480,7 @@ export default { ...metadata, content: code };
   }
 
   async process(source: string, key: string): Promise<DocxesOutput> {
-    const CACHE_VERSION = "v10"; // Increment for highlighter adjustment
+    const CACHE_VERSION = "v1"; // Increment for highlighter adjustment
     const mdxConfigHash = createHash('sha256').update(JSON.stringify(this.config.mdx || {})).digest('hex').slice(0, 8);
     const sourceHash = createHash('sha256').update(source).digest('hex').slice(0, 12);
     
