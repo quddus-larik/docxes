@@ -45,7 +45,7 @@ export const CodeBlock: React.FC<PreProps> = ({
         style={style}
         {...props}
       >
-        {children}
+        {React.cloneElement(children as React.ReactElement, { isCodeBlock: true })}
       </pre>
 
       <Button
