@@ -83,6 +83,10 @@ export interface XMetaConfig {
   versions: {
     default: string;
   };
+  sitemap?: {
+    enabled?: boolean;
+    siteUrl?: string;
+  };
   header?: React.ComponentType<HeaderProps>;
   footer?: React.ComponentType<FooterProps>;
   button?: React.ComponentType<any>;
