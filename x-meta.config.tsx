@@ -20,15 +20,9 @@ export const XMeta = createConfig({
   search: {
     enabled: true,
   },
-  theme:{
-    mdx:{
-      highlighter: "rehype-pretty-code",
-      themes: {
-        light: "github-light",
-        dark: "github-dark",
-      },
-      keepBackground: false
-    }
+  sitemap: {
+    enabled: true,
+    siteUrl: process.env.NEXT_PUBLIC_SITE_URL || "https://docxes.vercel.app/sitemap.xml",
   },
   sidebar: {
     ...ShadcnUI.sidebar,

@@ -18,10 +18,10 @@ const defaults: XMetaConfig = {
   },
   theme: {
     mdx: {
-      highlighter: "shiki",
+      highlighter: "rehype-pretty-code",
       themes: {
         light: "github-light",
-        dark: "github-dark",
+        dark: "one-dark-pro",
       },
       keepBackground: false,
     },
