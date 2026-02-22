@@ -12,6 +12,7 @@
 
 #docxes
 .docxes
+sitemap.xml
 
 # testing
 /coverage
