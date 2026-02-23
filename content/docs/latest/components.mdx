@@ -23,8 +23,8 @@ order: 3
 
 ### Alerts
 
-```markdown
-<MdxAlert type="info" title="Information">
+```mdx
+<MdxAlert type={ "info" | "warning" | "error" | "success" } title="Information">
 alert information provided by docxes styled by tailwindcss
 </MdxAlert>
 ```
@@ -32,3 +32,27 @@ alert information provided by docxes styled by tailwindcss
 <MdxAlert type="info" title="Information">
 alert information provided by docxes styled by tailwindcss
 </MdxAlert>
+
+<MdxAlert type="warning" title="Warning">
+Do not Touch @code/engine file with zero knowledge
+</MdxAlert>
+
+<MdxAlert type="error" title="Error">
+You deleted @code/engine file with zero understanding
+</MdxAlert>
+
+<MdxAlert type="success" title="Success">
+You re-initialized @code/engine file with for documentation 
+</MdxAlert>
+
+### Code Components
+
+`console.log("Hello Docxes")`
+
+---
+
+```typescript 
+const num: number = 13;
+const str: string = "Hi Number"
+console.log(`${str}:${num}`)
+```
