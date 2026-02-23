@@ -30,19 +30,21 @@ const defaults: XMetaConfig = {
   modeToggle: ModeToggle,
   sidebar: { 
     component: DocSidebar, 
-    styles: {},
-    header: ({ version, versions }: { version: string; versions?: string[] }) => {
-      return (
-        <div className="px-6 py-4 border-b">
-          <div className="flex items-center justify-between mb-4">
-            <span className="font-bold text-sm tracking-tight">Documentation</span>
-          </div>
-          {versions && versions.length > 1 && (
-            <VersionSelect versions={versions} currentVersion={version} />
-          )}
-        </div>
-      )
-    }
+    styles: {
+      
+    },
+    // header: ({ version, versions, versionsMetadataMap }: { version: string; versions?: string[]; versionsMetadataMap?: Record<string, { title?: string; description?: string }> }) => {
+    //   return (
+    //     <div className="px-6 py-4 border-b">
+    //       <div className="flex items-center justify-between mb-4">
+    //         <span className="font-bold text-sm tracking-tight">Documentation</span>
+    //       </div>
+    //       {versions && versions.length > 1 && (
+    //         <VersionSelect versions={versions} currentVersion={version} versionsMetadataMap={versionsMetadataMap} />
+    //       )}
+    //     </div>
+    //   )
+    // }
   },
   toc: { component: DocTOC, styles: {} },
   pagination: { component: DocPagination, styles: {} },

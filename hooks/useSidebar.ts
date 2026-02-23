@@ -11,8 +11,10 @@ export function useDocSidebar(version: string, currentPath: string, initialItems
   const { open, setOpen } = useSidebar();
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
   const [items, setItems] = useState<DocNavItem[]>(initialItems || []);
+  const [metadata, setMetadata] = useState<{ title?: string; description?: string } | undefined>();
   const [loading, setLoading] = useState(!initialItems);
   const [versions, setVersions] = useState<string[]>(initialVersions || []);
+  const [versionsMetadataMap, setVersionsMetadataMap] = useState<Record<string, { title?: string; description?: string }>>({});
   const [loadingVersions, setLoadingVersions] = useState(!initialVersions);
   const loadedVersionRef = useRef<string | null>(initialItems ? version : null);
 
@@ -20,8 +22,9 @@ export function useDocSidebar(version: string, currentPath: string, initialItems
   useEffect(() => {
     if (initialVersions) return;
     const getVersions = async () => {
-      const data = await fetchVersions();
-      setVersions(data);
+      const { versions: vList, metadataMap } = await fetchVersions();
+      setVersions(vList);
+      setVersionsMetadataMap(metadataMap);
       setLoadingVersions(false);
     };
     getVersions();
@@ -37,8 +40,9 @@ export function useDocSidebar(version: string, currentPath: string, initialItems
     }
 
     const getNavigation = async () => {
-      const data = await fetchNavigation(version);
-      setItems(data);
+      const { nav, metadata } = await fetchNavigation(version);
+      setItems(nav);
+      setMetadata(metadata);
       setLoading(false);
       loadedVersionRef.current = version;
     };
@@ -76,8 +80,10 @@ export function useDocSidebar(version: string, currentPath: string, initialItems
     expandedItems,
     toggleExpanded,
     items,
-    loading,
+    metadata,
     versions,
+    versionsMetadataMap,
+    loading,
     loadingVersions,
     isActive,
     shouldExpand,

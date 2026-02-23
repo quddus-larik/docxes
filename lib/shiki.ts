@@ -6,7 +6,7 @@ export function getShiki() {
   if (!highlighterPromise) {
     highlighterPromise = createHighlighter({
       themes: ["github-dark", "github-light"],
-      langs: ["javascript", "typescript", "bash", "json","c","c#","cpp","plaintext"], // preload common langs
+      langs: ["javascript", "typescript", "bash", "json","c","c#","cpp","plaintext","mdx"], // preload common langs
     });
   }
 

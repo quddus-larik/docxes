@@ -49,3 +49,17 @@ export async function getSearchIndex(
 export async function getVersions() {
   return getEngine().getVersions();
 }
+
+/**
+ * Returns all versions metadata (Record<version, metadata>).
+ */
+export async function getVersionsMetadata() {
+  return getEngine().getVersionsMetadata();
+}
+
+/**
+ * Returns version metadata (title, description) from main.mdx at the root of the version folder.
+ */
+export async function getVersionMetadata(version: string) {
+  return getEngine().getVersionMetadata(version);
+}

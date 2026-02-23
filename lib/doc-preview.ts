@@ -17,15 +17,14 @@ export async function resolveDoc(
   version: string,
   slug: string[],
 ) {
-  if (slug.length === 0) {
-    return null;
-  }
+  // If slug is empty, try to resolve the "main" document for that version
+  const targetSlug = slug.length === 0 ? ["main"] : slug;
 
-  const doc = await getDoc(version, slug);
+  const doc = await getDoc(version, targetSlug);
 
-  if (!doc) {
-    notFound();
-  }
+  // if (!doc) {
+  //   notFound();
+  // }
 
   return doc;
 }

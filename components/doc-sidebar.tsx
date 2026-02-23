@@ -5,6 +5,7 @@ import type { DocNavItem } from "@/core/engine";
 import { useDocSidebar } from "@/hooks/useSidebar";
 import { cn } from "@/lib/utils";
 import { useFramework } from "@/core/framework";
+import React from "react";
 
 export interface DocSidebarStyles {
   sidebar?: string;
@@ -65,8 +66,10 @@ export function DocSidebar({
     expandedItems,
     toggleExpanded,
     items: hookItems,
-    loading,
+    metadata,
     versions: hookVersions,
+    versionsMetadataMap,
+    loading,
     loadingVersions,
     isActive,
     shouldExpand,
@@ -189,10 +192,27 @@ export function DocSidebar({
           open ? "translate-x-0" : "-translate-x-full"
         )}
       >
-        {header}
+        {header && React.isValidElement(header) 
+          ? React.cloneElement(header as React.ReactElement<any>, { versions, versionsMetadataMap }) 
+          : header}
         
         <div className="flex-1 overflow-y-auto px-3 py-4">
           <nav className={cn("flex flex-col gap-4", s.nav)}>
+            {metadata && (
+              <div className="px-3 mb-2">
+                {metadata.title && (
+                  <h2 className="text-sm font-semibold text-foreground">
+                    {metadata.title}
+                  </h2>
+                )}
+                {metadata.description && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {metadata.description}
+                  </p>
+                )}
+              </div>
+            )}
+
             {isNavLoading ? (
               <div className="px-3 py-2 text-xs text-muted-foreground italic">
                 Loading navigation…

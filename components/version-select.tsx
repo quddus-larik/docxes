@@ -15,12 +15,14 @@ import {
 interface VersionSelectProps {
   versions: string[]
   currentVersion: string
+  versionsMetadataMap?: Record<string, { title?: string; description?: string }>
   className?: string
 }
 
 export function VersionSelect({ 
   versions, 
   currentVersion, 
+  versionsMetadataMap = {},
   className,
 }: VersionSelectProps) {
   const { useRouter } = useFramework()
@@ -34,13 +36,15 @@ export function VersionSelect({
       }}
     >
       <SelectTrigger className={cn("w-full", className)}>
-        <SelectValue />
+        <SelectValue>
+          {versionsMetadataMap[currentVersion]?.title || currentVersion}
+        </SelectValue>
       </SelectTrigger>
       <SelectContent>
         <SelectGroup>
           {versions.map((v) => (
-            <SelectItem key={v} value={v} className="uppercase font-medium">
-              {v}
+            <SelectItem key={v} value={v} className="font-medium">
+              {versionsMetadataMap[v]?.title || v}
             </SelectItem>
           ))}
         </SelectGroup>

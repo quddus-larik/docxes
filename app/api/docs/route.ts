@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { successResponse, errorResponse } from "@/lib/api-response";
-import { getNavigation, getSearchIndex, getVersions } from "@/core/hooks";
+import { getNavigation, getSearchIndex, getVersions, getVersionMetadata, getVersionsMetadata } from "@/core/hooks";
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -11,11 +11,13 @@ export async function GET(request: NextRequest) {
     switch (type) {
       case "structure":
         const nav = await getNavigation(version);
-        return successResponse({ nav, version });
+        const metadata = await getVersionMetadata(version);
+        return successResponse({ nav, version, metadata });
         
       case "versions":
         const versions = await getVersions();
-        return successResponse({ versions });
+        const versionsMetadata = await getVersionsMetadata();
+        return successResponse({ versions, versionsMetadata });
 
       case "search":
         const docs = await getSearchIndex();

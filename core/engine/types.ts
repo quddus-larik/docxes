@@ -112,8 +112,14 @@ export interface DocPaginationStyles {
   title?: string;
 }
 
+export interface VersionMetadata {
+  title?: string;
+  description?: string;
+}
+
 export interface Manifest {
   versions: string[];
+  versionMetadata?: Record<string, VersionMetadata>;
   navigation: Record<string, NavItem[]>;
   docs: Record<string, DocFile>; // key: version/slug
   searchIndex: SearchResult[];

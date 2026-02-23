@@ -59,11 +59,48 @@ export class DocxesEngine {
     }
   }
 
+  async getVersionMetadata(version: string): Promise<{ title?: string; description?: string } | null> {
+    if (this.manifest && this.manifest.versionMetadata?.[version]) {
+      return this.manifest.versionMetadata[version];
+    }
+
+    const versionDir = path.join(this.docsDir, version);
+    const mainCandidates = [
+      path.join(versionDir, "main.mdx"),
+      path.join(versionDir, "main.md"),
+      path.join(versionDir, "index.mdx"),
+      path.join(versionDir, "index.md"),
+    ];
+
+    let mainFile: string | null = null;
+    for (const cand of mainCandidates) {
+      if (await this.fileExists(cand)) {
+        mainFile = cand;
+        break;
+      }
+    }
+
+    if (!mainFile) return null;
+
+    try {
+      const content = await fs.readFile(mainFile, "utf-8");
+      const { frontmatter } = await parse(content);
+      return {
+        title: frontmatter.title,
+        description: frontmatter.description,
+      };
+    } catch (e) {
+      console.error(`[DocxesEngine] Error reading version metadata for ${version}:`, e);
+      return null;
+    }
+  }
+
   async build(): Promise<void> {
     console.log("[DocxesEngine] Starting scalable pre-compilation build...");
     const versions = await this.getVersions();
     const manifest: Manifest = {
       versions,
+      versionMetadata: {},
       navigation: {},
       docs: {},
       searchIndex: [],
@@ -82,6 +119,12 @@ export class DocxesEngine {
 
       const versionDir = path.join(this.docsDir, version);
       
+      // Get version metadata (from main.mdx)
+      const vMetadata = await this.getVersionMetadata(version);
+      if (vMetadata) {
+        manifest.versionMetadata![version] = vMetadata;
+      }
+
       // Build navigation for this version
       manifest.navigation[version] = await this.getNavigation(version);
 
@@ -229,6 +272,24 @@ export default { ...metadata, content: code };
     } catch (e) {
       return [];
     }
+  }
+
+  async getVersionsMetadata(): Promise<Record<string, VersionMetadata>> {
+    if (this.manifest && this.manifest.versionMetadata) {
+      return this.manifest.versionMetadata;
+    }
+
+    const versions = await this.getVersions();
+    const metadata: Record<string, VersionMetadata> = {};
+
+    for (const v of versions) {
+      const vMeta = await this.getVersionMetadata(v);
+      if (vMeta) {
+        metadata[v] = vMeta;
+      }
+    }
+
+    return metadata;
   }
 
   async getAllDocs(version: string): Promise<DocFile[]> {
