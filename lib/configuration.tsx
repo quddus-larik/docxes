@@ -4,6 +4,7 @@ import { DocTOC } from "@/components/doc-toc";
 import { DocPagination } from "@/components/doc-pagination";
 import { ModeToggle } from "@/components/mode-toggle";
 import { XMetaConfig } from "@/types/interface";
+import { mdxComponents } from "@/components/mdx/mdx-components";
 
 const DefaultContainer = ({ children }: { children: React.ReactNode }) => (
   <div className="flex flex-col gap-2">{children}</div>
@@ -55,12 +56,17 @@ const defaults: XMetaConfig = {
   description: "A dynamic documentation engine build with typescript.",
   siteUrl: "https://docxes.vercel.app",
   contentDir: "content/docs",
+  versions: {
+    default: "latest",
+    allowVersions: true,
+  },
   search: {
     enabled: true,
   },
   modeToggle: ModeToggle,
   theme: {
     mdx: {
+      components: mdxComponents,
       highlighter: "rehype-pretty-code",
       highlighterTheme: {
         light: "github-light",
@@ -92,6 +98,7 @@ export const createConfig = (overrides: Partial<XMetaConfig> = {}): XMetaConfig 
   return {
     ...defaults,
     ...overrides,
+    versions:  defaults.versions ,
     search: { ...defaults.search, ...overrides.search },
     theme: { 
       ...defaults.theme, 

@@ -22,7 +22,6 @@ export function XMetaProvider({
 export function useXMeta() {
   const context = useContext(XMetaContext);
   if (!context) {
-    // If we're on the server or outside provider, we might need a fallback or handle it
     return null;
   }
   return context;

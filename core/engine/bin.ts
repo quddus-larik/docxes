@@ -5,10 +5,10 @@ import { XMeta } from "../../x-meta.config";
 async function main() {
   const engine = new DocxesEngine({
     mdx: XMeta.theme?.mdx,
-    documentsPath: XMeta.documentsPath,
+    contentDir: XMeta.contentDir,
     sitemap: {
       enabled: XMeta.sitemap?.enabled,
-      siteUrl: XMeta.sitemap?.siteUrl || XMeta.siteUrl,
+      siteUrl: XMeta.siteUrl,
     },
   });
 

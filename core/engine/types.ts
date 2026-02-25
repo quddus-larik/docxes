@@ -46,7 +46,7 @@ export interface EngineConfig {
   plugins?: DocxesPlugin[];
   components?: Record<string, any>;
   theme?: string;
-  documentsPath?: string;
+  contentDir?: string;
     mdx?: {
       highlighter?: string | "rehype-pretty-code";
       theme?: string | { light?: string; dark?: string };

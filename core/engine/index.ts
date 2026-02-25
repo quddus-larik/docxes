@@ -3,6 +3,8 @@ export * from "./types";
 export * from "./parser";
 export * from "./compiler";
 export * from "./renderer";
+export * from "./view";
+export * from "./view-client";
 export * from "./ast/toc";
 export * from "./plugins/plugin-system";
 export * from "./cache/cache-manager";

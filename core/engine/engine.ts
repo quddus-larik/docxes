@@ -7,7 +7,7 @@ import { compile } from "./compiler";
 import { generateTOC } from "./ast/toc";
 import { PluginSystem } from "./plugins/plugin-system";
 import { CacheManager } from "./cache/cache-manager";
-import { EngineConfig, DocxesOutput, NavItem, SearchResult, Manifest } from "./types";
+import { EngineConfig, DocxesOutput, NavItem, SearchResult, Manifest, VersionMetadata } from "./types";
 import { DocFile } from "./types";
 
 export class DocxesEngine {
@@ -22,7 +22,7 @@ export class DocxesEngine {
     this.config = config;
     this.pluginSystem = new PluginSystem(config.plugins || []);
     this.cache = new CacheManager();
-    this.docsDir = path.resolve(process.cwd(), config.documentsPath || "content/docs");
+    this.docsDir = path.resolve(process.cwd(), config.contentDir || "content/docs");
     this.manifestPath = path.resolve(process.cwd(), ".docxes/manifest.json");
     
     // In production, try to load the manifest immediately
