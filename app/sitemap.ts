@@ -3,7 +3,7 @@ import { engine } from "@/lib/engine"
 import { XMeta } from "@/x-meta.config"
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const siteUrl = XMeta.sitemap?.siteUrl || XMeta.siteUrl;
+  const siteUrl = XMeta.siteUrl;
   const entries: MetadataRoute.Sitemap = [
     {
       url: siteUrl,

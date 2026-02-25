@@ -7,7 +7,6 @@ export function getPlugin<T extends ComponentName>(name: T): NonNullable<Compone
     sidebar: XMeta.theme?.sidebar?.component,
     TOC: XMeta.theme?.toc?.component,
     pagination: XMeta.theme?.pagination?.component,
-    button: XMeta.button,
   };
 
   const component = components[name];

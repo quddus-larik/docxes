@@ -5,7 +5,7 @@ import { ChevronDown } from "lucide-react";
 import type { DocNavItem } from "@/core/engine";
 import { useDocSidebar } from "@/hooks/useSidebar";
 import { useFramework } from "@/core/framework";
-import { useXMeta } from "@/lib/config-context";
+import { useXMeta } from "@/core/context";
 
 interface DocSidebarProps {
   version: string;

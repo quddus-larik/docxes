@@ -3,6 +3,7 @@ import { createConfig } from "@/lib/configuration";
 import { useFramework } from "@/core/framework";
 import { SearchDialog } from "@/components/search-dialog";
 import { ModeToggle } from "@/components/mode-toggle";
+import { mdxComponents } from "./components/mdx/mdx-components";
 
 /**
  * 🛠️ DOCXES CONFIGURATION
@@ -12,6 +13,10 @@ import { ModeToggle } from "@/components/mode-toggle";
  */
 
 export const XMeta = createConfig({
+  versions: {
+    default: "latest",
+    allowVersions: true
+  },
   framework: "nextjs",
   siteName: "DocXes",
   description: "Advanced dynamic documentation engine with effortless UI control.",
@@ -22,6 +27,7 @@ export const XMeta = createConfig({
   },
   theme: {
     mdx: {
+      components: mdxComponents,
       highlighter: "rehype-pretty-code",
       highlighterTheme: {
         dark: "one-dark-pro",
@@ -32,7 +38,7 @@ export const XMeta = createConfig({
     },
     
     header: (
-      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
         <div className="container flex h-14 items-center justify-between px-4 mx-auto">
           <div className="flex items-center gap-4">
             <span className="font-bold text-lg tracking-tight">DocXes</span>
@@ -62,8 +68,8 @@ export const XMeta = createConfig({
 
     sidebar: {
       Container: ({ children }) => (
-        <aside className="w-64 border-r h-screen sticky top-0 overflow-y-auto bg-background hidden lg:block">
-          <div className="p-4 flex flex-col gap-2">{children}</div>
+        <aside className="w-64 border-r sticky top-14 h-[calc(100vh-3.5rem)] overflow-y-auto bg-background hidden lg:block scrollbar-none hover:scrollbar-thin transition-all">
+          <div className="p-4 flex flex-col gap-2 pb-10">{children}</div>
         </aside>
       ),
       Item: ({ item, href, isActive }) => {
@@ -99,19 +105,18 @@ export const XMeta = createConfig({
 
     toc: {
       Container: ({ children }) => (
-        <aside className="w-64 hidden xl:block h-screen sticky top-0 overflow-y-auto py-8 px-6">
+        <aside className="w-64 hidden xl:block sticky top-14 h-[calc(100vh-3.5rem)] overflow-y-auto py-8 px-6 scrollbar-none hover:scrollbar-thin transition-all">
           <h4 className="text-sm font-bold mb-4 uppercase tracking-widest text-muted-foreground/50">On This Page</h4>
-          <div className="flex flex-col gap-1.5">{children}</div>
+          <div className="flex flex-col gap-1.5 pb-10">{children}</div>
         </aside>
       ),
       Item: ({ item, isActive }) => (
         <div
           className={`text-xs transition-colors cursor-pointer py-1 ${
             isActive 
-              ? "text-primary font-semibold translate-x-1" 
+              ? "text-primary font-semibold" 
               : "text-muted-foreground hover:text-foreground"
           }`}
-          style={{ paddingLeft: `${(item.depth - 2) * 12}px` }}
         >
           {item.text}
         </div>

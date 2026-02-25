@@ -3,7 +3,7 @@
 import React from "react";
 import type { DocHeading } from "@/core/engine";
 import { useDocTOC } from "@/hooks/useTOC";
-import { useXMeta } from "@/lib/config-context";
+import { useXMeta } from "@/core/context";
 
 interface DocTOCProps {
   headings: DocHeading[];

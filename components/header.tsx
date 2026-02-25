@@ -6,9 +6,9 @@ import { PanelLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useSidebar } from "./sidebar-context";
 import { cn } from "@/lib/utils";
-import { XMeta } from "@/x-meta.config";
 import { HeaderProps } from "@/types/interface";
 import { useFramework } from "@/core/framework";
+import { useXMeta } from "@/core/context";
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -69,7 +69,8 @@ function ListItem({
 
 export function Header({ siteName, className, versions }: HeaderProps) {
   const { toggle } = useSidebar();
-  const ModeToggle = XMeta.modeToggle;
+  const config = useXMeta();
+  const ModeToggle = config?.modeToggle;
   const { Link, useRouter, useParams, usePathname } = useFramework();
   const params = useParams();
   const router = useRouter();
@@ -120,13 +121,13 @@ export function Header({ siteName, className, versions }: HeaderProps) {
         </div>
 
         <div className="flex items-center gap-4">
-          {XMeta.search?.enabled !== false && (
+          {config?.search?.enabled !== false && (
             <div className="hidden sm:block w-full max-w-[300px] lg:max-w-[400px]">
               {/* <SearchDialog versions={versions} /> */}
             </div>
           )}
           <div className="flex items-center gap-2">
-            {XMeta.search?.enabled !== false && (
+            {config?.search?.enabled !== false && (
               <div className="sm:hidden">
                 {/* <SearchDialog versions={versions} /> */}
               </div>

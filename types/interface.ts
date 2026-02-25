@@ -38,6 +38,12 @@ export interface TOCItemProps {
   isActive: boolean;
 }
 
+export interface HeaderProps {
+  siteName: string;
+  className?: string;
+  versions?: string[];
+}
+
 export interface DocsViewerProps {
   sidebar: React.ReactNode;
   content: React.ReactNode;
@@ -54,9 +60,16 @@ export interface XMetaConfig {
   description: string;
   siteUrl: string;
   contentDir: string;
+  versions?: {
+    default: string;
+    allowVersions?: boolean;
+  };
   search: {
     enabled: boolean;
     provider?: string;
+  };
+  sitemap?: {
+    enabled: boolean 
   };
   modeToggle?: React.ComponentType<any>;
   theme: {
