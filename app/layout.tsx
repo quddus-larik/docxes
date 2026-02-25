@@ -42,7 +42,14 @@ export const metadata: Metadata = {
     ],
     apple: "/apple-icon.png",
   },
-  metadataBase: new URL(XMeta.siteUrl),
+  metadataBase: (() => {
+    try {
+      const url = XMeta.siteUrl || "https://docxes.vercel.app";
+      return new URL(url.startsWith("http") ? url : `https://${url}`);
+    } catch (e) {
+      return new URL("https://docxes.vercel.app");
+    }
+  })(),
   alternates: {
     canonical: XMeta.siteUrl,
   },
@@ -120,11 +127,12 @@ export default async function RootLayout({
         <Providers attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           <ThemeInjector />
           <div className="relative flex min-h-svh flex-col">
-            {XMeta.header && (
-              <XMeta.header 
-                siteName={XMeta.siteName} 
-                versions={versions} 
-              />
+            {XMeta.theme.header && (
+              typeof XMeta.theme.header === "function" ? (
+                <XMeta.theme.header siteName={XMeta.siteName} versions={versions} />
+              ) : (
+                XMeta.theme.header
+              )
             )}
             <main className="flex-1 flex flex-col">
               <Suspense fallback={<div>Loading...</div>}>

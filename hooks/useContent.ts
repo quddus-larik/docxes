@@ -57,21 +57,15 @@ export async function useContentData(version: string, slug: string[] = []) {
 
   // Get Styles and Slots from XMeta directly
   const styles = {
-    sidebar: XMeta.sidebar?.styles || {},
-    TOC: XMeta.toc?.styles || {},
-    pagination: XMeta.pagination?.styles || {},
+    sidebar: XMeta.theme.sidebar?.styles || {},
+    TOC: XMeta.theme.toc?.styles || {},
+    pagination: XMeta.theme.pagination?.styles || {},
   };
   
   const components = {
-    sidebar: XMeta.sidebar?.component || getPlugin("sidebar"),
-    sidebarHeader: XMeta.sidebar?.header,
-    sidebarFooter: XMeta.sidebar?.footer,
-    sidebarItem: XMeta.sidebar?.item,
-    TOC: XMeta.toc?.component || getPlugin("TOC"),
-    TOCHeader: XMeta.toc?.header,
-    TOCFooter: XMeta.toc?.footer,
-    tocItem: XMeta.toc?.item,
-    pagination: XMeta.pagination?.component || getPlugin("pagination"),
+    sidebar: XMeta.theme.sidebar?.component,
+    TOC: XMeta.theme.toc?.component,
+    pagination: XMeta.theme.pagination?.component,
   };
 
   const articleSchema = doc ? generateArticleSchema({
@@ -90,9 +84,9 @@ export async function useContentData(version: string, slug: string[] = []) {
     next,
     navigation,
     allVersions,
-    SidebarSlot: components.sidebar,
-    PaginationSlot: components.pagination,
-    TOCSlot: components.TOC,
+    SidebarSlot: components.sidebar || (() => null),
+    PaginationSlot: components.pagination || (() => null),
+    TOCSlot: components.TOC || (() => null),
     articleSchema,
     breadcrumbSchema,
     styles,
