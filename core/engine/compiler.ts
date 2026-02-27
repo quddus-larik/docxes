@@ -2,6 +2,8 @@ import { compile as mdxCompile } from "@mdx-js/mdx";
 import remarkGfm from "remark-gfm";
 import rehypeSlug from "rehype-slug";
 import rehypePrettyCode from "rehype-pretty-code";
+import rehypeKatex from "rehype-katex"
+import remarkMath from "remark-math"
 
 export interface CompileOptions {
   mdx?: {
@@ -22,11 +24,13 @@ export async function compile(content: string, options: CompileOptions = {}) {
 
   const remarkPlugins = [
     remarkGfm,
+    remarkMath,
     ...(options.remarkPlugins || [])
   ];
 
   const rehypePlugins: any[] = [
     rehypeSlug,
+    rehypeKatex,
     ...(options.rehypePlugins || [])
   ];
 
@@ -42,6 +46,7 @@ export async function compile(content: string, options: CompileOptions = {}) {
       keepBackground: mdxConfig.keepBackground ?? false, // Authentically use theme backgrounds
       grid: false,
     }]);
+    
   }
 
   try {

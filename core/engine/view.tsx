@@ -1,4 +1,3 @@
-import React from "react";
 import { getDocData, generateArticleSchema, generateBreadcrumbSchema } from "../hooks";
 import { DocsViewerClient } from "./view-client";
 import { notFound } from "next/navigation";
