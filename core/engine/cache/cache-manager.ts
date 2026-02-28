@@ -1,5 +1,6 @@
 import * as fs from "node:fs/promises";
 import path from "node:path";
+import { createHash } from "node:crypto";
 import { DocxesOutput } from "../types";
 
 export class CacheManager {
@@ -34,7 +35,7 @@ export class CacheManager {
   }
 
   private hashKey(key: string): string {
-    // Simple hash for file names, could use crypto for better uniqueness
-    return key.replace(/[^a-z0-9]/gi, "_").toLowerCase();
+    // Use SHA256 hash for reliable, collision-free file names
+    return createHash("sha256").update(key).digest("hex").slice(0, 32);
   }
 }

@@ -1,27 +1,32 @@
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
 import { pathToFileURL } from 'node:url';
-import { createHash } from 'node:crypto'; // Add this import
+import { createHash } from 'node:crypto';
 import { parse } from "./parser";
 import { compile } from "./compiler";
 import { generateTOC } from "./ast/toc";
 import { PluginSystem } from "./plugins/plugin-system";
 import { CacheManager } from "./cache/cache-manager";
+import { FileHashTracker } from "./cache/file-hash-tracker";
 import { EngineConfig, DocxesOutput, NavItem, SearchResult, Manifest, VersionMetadata } from "./types";
 import { DocFile } from "./types";
 
 export class DocxesEngine {
   private pluginSystem: PluginSystem;
   private cache: CacheManager;
+  private hashTracker: FileHashTracker;
   private config: EngineConfig;
   private docsDir: string;
   private manifest: Manifest | null = null;
   private manifestPath: string;
+  // Cache for metadata to avoid re-reading docs for navigation
+  private metadataCache: Map<string, Partial<DocFile>> = new Map();
 
   constructor(config: EngineConfig = {}) {
     this.config = config;
     this.pluginSystem = new PluginSystem(config.plugins || []);
     this.cache = new CacheManager();
+    this.hashTracker = new FileHashTracker();
     this.docsDir = path.resolve(process.cwd(), config.contentDir || "content/docs");
     this.manifestPath = path.resolve(process.cwd(), ".docxes/manifest.json");
     
@@ -95,8 +100,14 @@ export class DocxesEngine {
     }
   }
 
-  async build(): Promise<void> {
-    console.log("[DocxesEngine] Starting scalable pre-compilation build...");
+  async build(incremental: boolean = true): Promise<void> {
+    console.log(`[DocxesEngine] Starting ${incremental ? 'incremental' : 'full'} pre-compilation build...`);
+    
+    // Load file hash tracker for incremental builds
+    if (incremental) {
+      await this.hashTracker.load();
+    }
+    
     const versions = await this.getVersions();
     const manifest: Manifest = {
       versions,
@@ -125,35 +136,56 @@ export class DocxesEngine {
         manifest.versionMetadata![version] = vMetadata;
       }
 
-      // Build navigation for this version
+      // Build navigation for this version (uses manifest metadata, not re-parsing)
       manifest.navigation[version] = await this.getNavigation(version);
 
       const walkAndBuild = async (dir: string, slugs: string[] = []) => {
-        const entries = await fs.readdir(dir);
         const processingPromises: Promise<any>[] = [];
+        
+        // Use readdirSync with withFileTypes for batched syscalls
+        let entries: any[] = [];
+        try {
+          entries = await fs.readdir(dir, { withFileTypes: true });
+        } catch (e) {
+          console.warn(`[DocxesEngine] Failed to read directory ${dir}:`, e);
+          return;
+        }
 
         for (const entry of entries) {
-          if (this.isHidden(entry)) continue;
-          const fullPath = path.join(dir, entry);
-          const stat = await fs.stat(fullPath);
-          const name = entry.replace(/\.(mdx|md)$/, "");
+          if (this.isHidden(entry.name)) continue;
+          const fullPath = path.join(dir, entry.name);
+          const name = entry.name.replace(/\.(mdx|md)$/, "");
           const currentSlugs = [...slugs, name];
           
-          if (stat.isDirectory()) {
+          if (entry.isDirectory()) {
             processingPromises.push(walkAndBuild(fullPath, currentSlugs));
-          } else if (entry.endsWith(".md") || entry.endsWith(".mdx")) {
+          } else if (entry.name.endsWith(".md") || entry.name.endsWith(".mdx")) {
             if (name !== "main" && name !== "index") {
               processingPromises.push(
                 (async () => {
+                  const fileHash = await this.hashTracker.getFileHash(fullPath);
+                  const docKey = `${version}/${currentSlugs.join("/")}`;
+                  
+                  // Skip if file hasn't changed (incremental build)
+                  if (incremental && !this.hashTracker.hasChanged(fullPath, fileHash)) {
+                    console.log(`[DocxesEngine] Skipped (unchanged): ${docKey}`);
+                    // Still need metadata in manifest
+                    const existingDoc = await this.getDocFromStorage(version, currentSlugs);
+                    if (existingDoc) {
+                      const { content, ...metadata } = existingDoc;
+                      manifest.docs[docKey] = metadata as any;
+                    }
+                    return;
+                  }
+                  
                   const doc = await this.getDoc(version, currentSlugs);
                   if (doc) {
-                    const docKey = `${version}/${currentSlugs.join("/")}`;
                     const docFilePath = path.join(dataDir, `${docKey}.mjs`);
                     
                     // Ensure subdirectories exist in atomic storage
                     await fs.mkdir(path.dirname(docFilePath), { recursive: true });
                     
-                    // Save individual doc as an ESM module (Truly "no JSON phase")
+                    // Save individual doc as an ESM module
                     const { content, ...metadata } = doc;
                     const docModule = `
 export const metadata = ${JSON.stringify(metadata, null, 2)};
@@ -161,8 +193,9 @@ export const code = ${JSON.stringify(content)};
 export default { ...metadata, content: code };
 `;
                     await fs.writeFile(docFilePath, docModule);
+                    this.hashTracker.updateHash(fullPath, fileHash);
                     
-                    // Keep ONLY metadata in manifest for fast access, EXCLUDE content/rawContent
+                    // Keep ONLY metadata in manifest for fast access
                     manifest.docs[docKey] = metadata as any;
                   }
                 })()
@@ -176,7 +209,7 @@ export default { ...metadata, content: code };
       await walkAndBuild(versionDir);
     }));
 
-    // Generate search index
+    // Generate search index (optimized with streaming)
     manifest.searchIndex = await this.getSearchIndex();
     
     // Ensure .docxes directory exists
@@ -189,6 +222,11 @@ export default { ...metadata, content: code };
     await fs.writeFile(this.manifestPath, JSON.stringify(manifest, null, 2));
     this.manifest = manifest;
 
+    // Save file hash tracker for next build
+    if (incremental) {
+      await this.hashTracker.save();
+    }
+
     // Export public search index for static environments
     const publicSearchPath = path.resolve(process.cwd(), "public/search-index.json");
     await fs.writeFile(publicSearchPath, JSON.stringify(manifest.searchIndex));
@@ -198,7 +236,7 @@ export default { ...metadata, content: code };
       await this.generateSitemap(manifest);
     }
     
-    console.log(`[DocxesEngine] Scalable build complete! Manifest generated at ${this.manifestPath}`);
+    console.log(`[DocxesEngine] Build complete! Manifest generated at ${this.manifestPath}`);
     console.log(`[DocxesEngine] Data stored in ${dataDir}`);
   }
 
@@ -256,22 +294,46 @@ export default { ...metadata, content: code };
     if (this.manifest) return this.manifest.versions;
 
     try {
-      const items = await fs.readdir(this.docsDir);
+      const items = await fs.readdir(this.docsDir, { withFileTypes: true });
       const versions: string[] = [];
       for (const item of items) {
-        if (this.isHidden(item)) continue;
-        const fullPath = path.join(this.docsDir, item);
-        const stat = await fs.stat(fullPath);
-        if (stat.isDirectory()) versions.push(item);
+        if (this.isHidden(item.name)) continue;
+        if (item.isDirectory()) versions.push(item.name);
       }
+      
+      // Sort with semver-aware comparison
       return versions.sort((a, b) => {
-        const numA = parseInt(a.replace(/\D/g, "") || "0");
-        const numB = parseInt(b.replace(/\D/g, "") || "0");
-        return numA - numB;
+        // Try semver comparison first
+        const semverA = this.parseSemver(a);
+        const semverB = this.parseSemver(b);
+        
+        if (semverA && semverB) {
+          // Both are semver - compare numerically
+          const cmp = semverA.major - semverB.major || 
+                      semverA.minor - semverB.minor || 
+                      semverA.patch - semverB.patch;
+          if (cmp !== 0) return cmp;
+        }
+        
+        // Fallback to string comparison (case-insensitive)
+        return a.localeCompare(b);
       });
     } catch (e) {
       return [];
     }
+  }
+
+  private parseSemver(version: string): { major: number; minor: number; patch: number } | null {
+    // Match semver pattern: v1.2.3 or 1.2.3 (with optional suffix)
+    const match = version.match(/^v?(\d+)\.(\d+)\.(\d+)/);
+    if (match) {
+      return {
+        major: parseInt(match[1], 10),
+        minor: parseInt(match[2], 10),
+        patch: parseInt(match[3], 10),
+      };
+    }
+    return null;
   }
 
   async getVersionsMetadata(): Promise<Record<string, VersionMetadata>> {
@@ -339,14 +401,12 @@ export default { ...metadata, content: code };
       return this.manifest.docs[key];
     }
 
-    // 2. Try atomic file system (.docxes/data/...) using dynamic import
-    // In development, we skip the atomic cache to allow for live reloading of content.
-    if (process.env.NODE_ENV !== "development") {
+    // 2. In PRODUCTION: Try atomic file system (.docxes/data/...) using dynamic import
+    // In DEVELOPMENT: Skip atomic cache to enable hot reloading
+    if (process.env.NODE_ENV === "production") {
       const atomicPath = path.resolve(process.cwd(), `.docxes/data/${key}.mjs`);
       if (await this.fileExists(atomicPath)) {
         try {
-          // Use relative path for Next.js/Turbopack compatibility
-          // The engine is in core/engine/engine.ts, data is in .docxes/data/
           const relativePath = `../../.docxes/data/${key}.mjs`;
           const module = await import(relativePath);
           if (module.default) {
@@ -354,7 +414,6 @@ export default { ...metadata, content: code };
             return module.default;
           }
         } catch (e) {
-          // If relative import fails, try absolute as fallback
           try {
             const fileUrl = pathToFileURL(atomicPath).href;
             const module = await import(fileUrl);
@@ -363,6 +422,32 @@ export default { ...metadata, content: code };
             console.warn(`[DocxesEngine] Failed to import pre-compiled doc "${key}":`, e);
           }
         }
+      }
+    }
+
+    // 3. Try in-memory cache (but with development awareness)
+    // In development, skip cache for source files to enable hot reload
+    const cacheKey = `${createHash("sha256").update(key).digest("hex").slice(0, 12)}`;
+    if (process.env.NODE_ENV !== "development") {
+      const cached = await this.cache.get(cacheKey);
+      if (cached) {
+        console.log(`[DocxesEngine] Cache HIT (memory): ${key}`);
+        return {
+          slug,
+          path: "",
+          title: (cached.metadata as any).title || "",
+          description: (cached.metadata as any).description,
+          order: (cached.metadata as any).order,
+          keywords: (cached.metadata as any).keywords,
+          content: cached.compiled,
+          rawContent: "",
+          plainText: (cached.metadata as any).plainText || "",
+          headings: (cached.metadata as any).toc?.map((item: any) => ({
+            level: item.depth,
+            text: item.title,
+            id: item.id,
+          })) || [],
+        };
       }
     }
 
@@ -421,6 +506,30 @@ export default { ...metadata, content: code };
     };
   }
 
+  private async getDocFromStorage(version: string, slug: string[]): Promise<DocFile | null> {
+    const key = `${version}/${slug.join("/")}`;
+    const atomicPath = path.resolve(process.cwd(), `.docxes/data/${key}.mjs`);
+    
+    if (await this.fileExists(atomicPath)) {
+      try {
+        const relativePath = `../../.docxes/data/${key}.mjs`;
+        const module = await import(relativePath);
+        if (module.default) {
+          return module.default;
+        }
+      } catch (e) {
+        try {
+          const fileUrl = pathToFileURL(atomicPath).href;
+          const module = await import(fileUrl);
+          if (module.default) return module.default;
+        } catch (e2) {
+          return null;
+        }
+      }
+    }
+    return null;
+  }
+
   async getNavigation(version: string): Promise<NavItem[]> {
     if (this.manifest && this.manifest.navigation[version]) {
       return this.manifest.navigation[version];
@@ -434,22 +543,30 @@ export default { ...metadata, content: code };
     const customSlugify = this.config.slugify || ((name: string) => name.toLowerCase().replace(/[^\w\s-]/g, "").replace(/\s+/g, "-"));
 
     const processDir = async (dir: string, parentSlugs: string[] = []): Promise<NavItem[]> => {
-      const entries = await fs.readdir(dir);
       const items: NavItem[] = [];
+      
+      // Use readdirSync with withFileTypes for batched syscalls
+      let entries: any[] = [];
+      try {
+        entries = await fs.readdir(dir, { withFileTypes: true });
+      } catch (e) {
+        console.warn(`[DocxesEngine] Failed to read directory ${dir}:`, e);
+        return [];
+      }
 
       for (const entry of entries) {
-        if (this.isHidden(entry)) continue;
-        const fullPath = path.join(dir, entry);
-        const stat = await fs.stat(fullPath);
-        const name = entry.replace(/\.(mdx|md)$/, "");
+        if (this.isHidden(entry.name)) continue;
+        const fullPath = path.join(dir, entry.name);
+        const name = entry.name.replace(/\.(mdx|md)$/, "");
         const slug = customSlugify(name);
         const currentSlugs = [...parentSlugs, slug];
 
-        if (stat.isDirectory()) {
-          const mainDoc = await this.getDoc(version, currentSlugs);
+        if (entry.isDirectory()) {
+          // Load metadata from manifest or cache instead of re-parsing
+          const mainDoc = await this.getDocMetadata(version, currentSlugs);
           const children = await processDir(fullPath, currentSlugs);
           
-          const isClickable = mainDoc && mainDoc.plainText.trim().length > 0;
+          const isClickable = mainDoc && mainDoc.plainText && mainDoc.plainText.trim().length > 0;
 
           if (children.length > 0 || mainDoc) {
             items.push({
@@ -459,13 +576,15 @@ export default { ...metadata, content: code };
               order: mainDoc?.order ?? 999,
             });
           }
-        } else if (entry.endsWith(".md") || entry.endsWith(".mdx")) {
+        } else if (entry.name.endsWith(".md") || entry.name.endsWith(".mdx")) {
           if (name === "main" || name === "index") continue;
-          const doc = await this.getDoc(version, currentSlugs);
+          
+          // Load metadata from manifest or cache instead of re-parsing
+          const doc = await this.getDocMetadata(version, currentSlugs);
           if (doc) {
-            const isClickable = doc.plainText.trim().length > 0;
+            const isClickable = doc.plainText && doc.plainText.trim().length > 0;
             items.push({
-              title: doc.title,
+              title: doc.title as string,
               href: isClickable ? `/docs/${version}/${currentSlugs.join("/")}` : undefined,
               order: doc.order ?? 999,
             });
@@ -479,6 +598,95 @@ export default { ...metadata, content: code };
     const nav = await processDir(versionDir);
     console.log(`[DocxesEngine] Navigation built: ${nav.length} top-level items`);
     return nav;
+  }
+
+  private async getDocMetadata(version: string, slug: string[]): Promise<Partial<DocFile> | null> {
+    const key = `${version}/${slug.join("/")}`;
+    
+    // Try cache first
+    if (this.metadataCache.has(key)) {
+      return this.metadataCache.get(key) || null;
+    }
+    
+    // Try manifest metadata (already loaded)
+    if (this.manifest && this.manifest.docs[key]) {
+      const docMeta = this.manifest.docs[key] as any;
+      this.metadataCache.set(key, docMeta);
+      return docMeta;
+    }
+
+    // Try loading from atomic file system without parsing content
+    if (process.env.NODE_ENV !== "development") {
+      const atomicPath = path.resolve(process.cwd(), `.docxes/data/${key}.mjs`);
+      if (await this.fileExists(atomicPath)) {
+        try {
+          const relativePath = `../../.docxes/data/${key}.mjs`;
+          const module = await import(relativePath);
+          if (module.metadata) {
+            const metadata = module.metadata;
+            this.metadataCache.set(key, metadata);
+            return metadata;
+          }
+        } catch (e) {
+          // Fallback to absolute path
+          try {
+            const fileUrl = pathToFileURL(atomicPath).href;
+            const module = await import(fileUrl);
+            if (module.metadata) {
+              this.metadataCache.set(key, module.metadata);
+              return module.metadata;
+            }
+          } catch (e2) {
+            console.warn(`[DocxesEngine] Failed to load metadata for "${key}":`, e);
+          }
+        }
+      }
+    }
+
+    // Fallback: Load minimal metadata from file without full compilation
+    const fileName = slug[slug.length - 1];
+    const dirPath = slug.slice(0, -1).length
+      ? path.join(this.docsDir, version, ...slug.slice(0, -1))
+      : path.join(this.docsDir, version);
+
+    const candidates = [
+      path.join(dirPath, `${fileName}.mdx`),
+      path.join(dirPath, `${fileName}.md`),
+      path.join(dirPath, fileName, "main.mdx"),
+      path.join(dirPath, fileName, "main.md"),
+    ];
+
+    let file: string | null = null;
+    for (const cand of candidates) {
+      if (await this.fileExists(cand)) {
+        file = cand;
+        break;
+      }
+    }
+
+    if (!file) return null;
+
+    try {
+      const fileContent = await fs.readFile(file, "utf-8");
+      const { frontmatter, content } = await parse(fileContent);
+      const plainText = content.replace(/<[^>]*>/g, "").replace(/\s+/g, " ").trim();
+      
+      const metadata: Partial<DocFile> = {
+        slug,
+        path: file,
+        title: frontmatter.title || slug[slug.length - 1],
+        description: frontmatter.description,
+        order: frontmatter.order,
+        keywords: frontmatter.keywords || [],
+        plainText,
+      };
+      
+      this.metadataCache.set(key, metadata);
+      return metadata;
+    } catch (e) {
+      console.warn(`[DocxesEngine] Failed to load metadata for "${key}":`, e);
+      return null;
+    }
   }
 
   async getSearchIndex(
@@ -495,25 +703,29 @@ export default { ...metadata, content: code };
 
     console.log(`[DocxesEngine] Generating search index...`);
     const versions = await this.getVersions();
-    const allDocsPromises: Promise<SearchResult | null>[] = []; // Array to hold promises
+    const allDocsPromises: Promise<SearchResult | null>[] = [];
 
     for (const version of versions) {
-      const docsMetadata = await this.getAllDocs(version); // Gets basic metadata
+      const docsMetadata = await this.getAllDocs(version);
       for (const docInfo of docsMetadata) {
-        // Push a promise for each getDoc call
         allDocsPromises.push(
           (async () => {
             try {
-              const doc = await this.getDoc(version, docInfo.slug);
+              // Load doc only if content is needed, otherwise use metadata
+              const doc = includeFields.includes("content") 
+                ? await this.getDoc(version, docInfo.slug)
+                : await this.getDocMetadata(version, docInfo.slug);
+              
               if (doc) {
                 let keywords = doc.keywords || [];
                 if (typeof keywords === "string")
                   keywords = (keywords as string).split(",").map((k: string) => k.trim());
 
+                const slugPath = docInfo.slug.join("/");
                 const result: SearchResult = {
-                  id: `${version}-${doc.slug.join("/")}`,
+                  id: `${version}-${slugPath}`,
                   version,
-                  href: `/docs/${version}/${doc.slug.join("/")}`,
+                  href: `/docs/${version}/${slugPath}`,
                 };
 
                 if (includeFields.includes("title")) result.title = doc.title;
@@ -524,24 +736,23 @@ export default { ...metadata, content: code };
                 return result;
               }
             } catch (e: any) {
-              console.error(`[DocxesEngine] Error getting doc for search index "${version}/${docInfo.slug.join("/")}":`, e);
+              console.error(`[DocxesEngine] Error indexing doc "${version}/${docInfo.slug.join("/")}":`, e.message);
             }
-            return null; // Return null if doc is not found or error occurs
+            return null;
           })()
         );
       }
     }
     
-    // Resolve all promises concurrently and filter out nulls
     const results = await Promise.all(allDocsPromises);
     const allDocs = results.filter((result): result is SearchResult => result !== null);
 
-    console.log(`[DocxesEngine] Search index generated: ${allDocs.length} total documents`);
+    console.log(`[DocxesEngine] Search index generated: ${allDocs.length} documents`);
     return allDocs;
   }
 
   async process(source: string, key: string): Promise<DocxesOutput> {
-    const CACHE_VERSION = "v1"; // Increment for highlighter adjustment
+    const CACHE_VERSION = "v1";
     const mdxConfigHash = createHash('sha256').update(JSON.stringify(this.config.mdx || {})).digest('hex').slice(0, 8);
     const sourceHash = createHash('sha256').update(source).digest('hex').slice(0, 12);
     
@@ -550,10 +761,14 @@ export default { ...metadata, content: code };
 
     const fullKey = `${CACHE_VERSION}_${key}_${mdxConfigHash}_${pluginNamesHash}_${slugifyHash}_source_${sourceHash}`;
 
-    const cached = await this.cache.get(fullKey);
-    if (cached) {
-      console.log(`[DocxesEngine] Cache HIT: ${key}`);
-      return cached;
+    // In development, skip cache to enable hot reloading
+    // In production, use cache for performance
+    if (process.env.NODE_ENV !== "development") {
+      const cached = await this.cache.get(fullKey);
+      if (cached) {
+        console.log(`[DocxesEngine] Cache HIT: ${key}`);
+        return cached;
+      }
     }
 
     console.log(`[DocxesEngine] Cache MISS: ${key} (Compiling...)`);
@@ -596,8 +811,10 @@ export default { ...metadata, content: code };
         },
       };
 
-      // 6. Cache
-      await this.cache.set(fullKey, output);
+      // 6. Cache only in production
+      if (process.env.NODE_ENV !== "development") {
+        await this.cache.set(fullKey, output);
+      }
 
       return output;
     } catch (e: any) {

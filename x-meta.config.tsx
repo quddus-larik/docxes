@@ -77,10 +77,10 @@ export const XMeta = createConfig({
         return (
           <Link
             href={href || "#"}
-            className={`px-3 py-1.5 rounded-md text-sm transition-all duration-200 block ${
+            className={`px-3 py-2 rounded-md text-sm transition-all duration-200 block font-medium ${
               isActive 
-                ? "bg-primary/10 text-primary font-medium border-l-2 border-primary pl-4" 
-                : "text-muted-foreground hover:bg-accent hover:text-accent-foreground pl-3"
+                ? "bg-primary/15 text-primary border-l-2 border-primary pl-2.5" 
+                : "text-muted-foreground hover:bg-accent/50 hover:text-accent-foreground pl-3"
             }`}
           >
             {item.title}
@@ -107,19 +107,20 @@ export const XMeta = createConfig({
       Container: ({ children }) => (
         <aside className="w-64 hidden xl:block sticky top-14 h-[calc(100vh-3.5rem)] overflow-y-auto py-8 px-6 scrollbar-none hover:scrollbar-thin transition-all">
           <h4 className="text-sm font-bold mb-4 uppercase tracking-widest text-muted-foreground/50">On This Page</h4>
-          <div className="flex flex-col gap-1.5 pb-10">{children}</div>
+          <div className="flex flex-col gap-0.5 pb-10">{children}</div>
         </aside>
       ),
       Item: ({ item, isActive }) => (
-        <div
-          className={`text-xs transition-colors cursor-pointer py-1 ${
+        <a
+          href={`#${item.id}`}
+          className={`text-xs transition-all duration-200 py-2 px-3 rounded-md block ${
             isActive 
-              ? "text-primary font-semibold" 
-              : "text-muted-foreground hover:text-foreground"
+              ? "text-primary font-semibold bg-primary/10 border-l-2 border-primary pl-2.5" 
+              : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
           }`}
         >
           {item.text}
-        </div>
+        </a>
       ),
     },
   },
