@@ -1,5 +1,5 @@
 import React from "react";
-import { createConfig } from "@/lib/configuration";
+import { createConfig } from "@/core/configuration";
 import { useFramework } from "@/core/framework";
 import { SearchDialog } from "@/components/search-dialog";
 import { ModeToggle } from "@/components/mode-toggle";

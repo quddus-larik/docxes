@@ -1,7 +1,7 @@
-import React from "react";
 import Link from "next/link";
 import { useRouter as useNextRouter, usePathname as useNextPathname, useParams as useNextParams } from "next/navigation";
 import { DocxesFramework } from "./framework";
+import React from "react";
 
 export const NextFramework: DocxesFramework = {
   Link: ({ href, children, ...props }) => (
@@ -20,4 +20,4 @@ export const NextFramework: DocxesFramework = {
   },
   usePathname: useNextPathname,
   useParams: useNextParams,
-};
+}
