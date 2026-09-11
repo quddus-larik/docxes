@@ -9,7 +9,11 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@heroui/react": "^3.2.5",
+    "@heroui/styles": "^3.2.5",
+    "@thesvg/react": "^3.3.4",
     "next": "16.3.4",
+    "postfolio": "workspace:*",
     "react": "19.2.8",
     "react-dom": "19.2.8"
   },
