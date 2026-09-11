@@ -4,6 +4,14 @@ import { existsSync } from "fs";
 import { createJiti } from "jiti";
 import matter from "gray-matter";
 
+export interface PostItem {
+    name: string;
+    slug: string;
+    path: string;
+    meta: Record<string, any>;
+    content: string;
+}
+
 export async function PostfolioConfig() {
     const projectRoot = process.cwd();
     const configPath = path.resolve(projectRoot, "postfolio.config.ts");
@@ -36,7 +44,7 @@ function toSlug(filename: string): string {
         .replace(/^-+|-+$/g, "");
 }
 
-export async function LocalPosts() {
+export async function LocalPosts(): Promise<PostItem[]> {
     const configData = await PostfolioConfig();
 
     if (!configData.localPosts?.dir) {
@@ -62,8 +70,8 @@ export async function LocalPosts() {
                 name: entry.name,
                 slug: toSlug(entry.name),
                 path: filePath,
-                meta: data,       // Extracted frontmatter object (title, date, tags, etc.)
-                content: content, // Raw MDX content without frontmatter
+                meta: data,
+                content: content,
             };
         })
     );
@@ -71,7 +79,68 @@ export async function LocalPosts() {
     return posts;
 }
 
-export async function ShowData() {
-    const data = await PostfolioConfig();
-    return data.name;
+function convertToDevToApiUrl(inputUrl: string): string {
+    const parsedUrl = new URL(inputUrl);
+
+    // Extract non-empty path segments (e.g. ["quddus-larik", "major-attacks-on-vercel-in-2025-dfm"])
+    let pathSegments = parsedUrl.pathname.split("/").filter(Boolean);
+
+    // Filter out "api" and "articles" if they are already in the URL path
+    pathSegments = pathSegments.filter(
+        (segment) => segment !== "api" && segment !== "articles"
+    );
+
+    if (pathSegments.length < 2) {
+        throw new Error(`Invalid dev.to article URL structure: ${inputUrl}`);
+    }
+
+    const [username, slug] = pathSegments;
+    return `https://dev.to/api/articles/${username}/${slug}`;
+}
+
+export async function DevToPosts(): Promise<PostItem[]> {
+    const configData = await PostfolioConfig();
+
+    const urls: string[] = configData.devToPosts;
+
+    if (!Array.isArray(urls) || urls.length === 0) {
+        throw new Error("Missing or invalid 'devToPosts' array in postfolio.config.ts");
+    }
+
+    const posts = await Promise.all(
+        urls.map(async (url) => {
+            const apiUrl = convertToDevToApiUrl(url);
+
+            const response = await fetch(apiUrl, {
+                headers: {
+                    "User-Agent": "Postfolio-Fetcher",
+                },
+            });
+
+            if (!response.ok) {
+                throw new Error(`Failed to fetch article from ${apiUrl}: ${response.status} ${response.statusText}`);
+            }
+
+            const article = await response.json();
+
+            return {
+                name: `${article.slug}.md`,
+                slug: article.slug,
+                path: article.url,
+                meta: {
+                    title: article.title,
+                    description: article.description,
+                    published_at: article.published_at,
+                    cover_image: article.cover_image,
+                    tags: article.tags,
+                    canonical_url: article.canonical_url,
+                    reading_time_minutes: article.reading_time_minutes,
+                    user: article.user,
+                },
+                content: article.body_markdown || article.body_html || "",
+            };
+        })
+    );
+
+    return posts;
 }
