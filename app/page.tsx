@@ -1,5 +1,6 @@
-import {Button, Typography} from "@heroui/react";
-import { Npm, Github } from "@thesvg/react";
+import {Button, Typography, Card} from "@heroui/react";
+import {Npm, Github} from "@thesvg/react";
+import {ArrowUpRight} from "lucide-react";
 
 export default function Home() {
     return (
@@ -17,13 +18,28 @@ export default function Home() {
                 </Typography.Paragraph>
                 <div className={"flex gap-2 items-center"}>
                     <Button>Getting Started</Button>
-                    <Button><Npm />View in npmjs</Button>
-                    <Button isIconOnly><Github variant={"mono"} /></Button>
+                    <a href={"https://npmjs.com/postfolio"} target={"_blank"}>
+                        <Button><Npm variant="mono"/>View in npmjs</Button>
+                    </a>
+                    <a href={"https://github.com/quddus-larik/postfolio"} target={"_blank"}>
+                        <Button isIconOnly><Github variant={"mono"}/></Button>
+                    </a>
                 </div>
                 <Typography.Paragraph>
                     Build your blogs with Statically in NextJS
                 </Typography.Paragraph>
-
+                <Typography.Heading level={1}>Showcases</Typography.Heading>
+                <div className={"flex gap-2"}>
+                    <a href={"https://quddus.is-a.dev"} target={"_blank"}>
+                        <Card className="w-[320px] relative hover:shadow-sm" variant="default">
+                            <ArrowUpRight className={"absolute top-2 right-2 size-5"}/>
+                            <Card.Header>
+                                <Card.Title>Quddu's blogs</Card.Title>
+                                <Card.Description>Minimal prominence with transparent background</Card.Description>
+                            </Card.Header>
+                        </Card>
+                    </a>
+                </div>
             </main>
         </div>
     );
