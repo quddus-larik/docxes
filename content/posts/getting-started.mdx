@@ -1,0 +1,143 @@
+---
+title: "Getting Started with Postfolio"
+description: "A quick introduction to plug blogs in nextjs based application with Next.js 15 and the App Router."
+date: "2026-08-12"
+author: "Quddus"
+---
+
+## Why Postfolio?
+
+Most Next.js portfolios with blog sections require extensive setup: installing multiple dependencies, managing complex
+imports and exports, and configuring custom MDX compilers. This inflates development time unnecessarily.
+
+Postfolio simplifies this with a unified blog adapter. Just install `postfolio`, add `postfolio.config.ts` to your root
+directory, and build your UI in components.tsx. You can seamlessly stream local MDX files and Dev.to posts directly into
+your personal design system—letting you highlight your writing and community discussions effortlesly.
+
+Postfolio eliminates boilerplate blog setup in Next.js by unifying local MDX and remote Dev.to content under a single
+configuration, allowing you to focus entirely on building your custom UI.
+
+## Installation
+
+```bash
+npx create-next-app@latest my-app
+```
+
+## Creating your first configuration file
+
+Simply create a `postfolio.config.ts` file inside the project `root` directory and write.
+
+```ts
+const postfolioConfig = {
+    localPosts: {
+        dir: "content/posts"  // mdx files directory
+    },
+    devToPosts: [] // dev.to blogs urls in array
+};
+
+export default postfolioConfig;
+```
+
+## Your Blog in `/content/posts/example-1.mdx`
+
+```mdx
+---
+Title: My BLog
+description: Just a blog
+Author: David
+---
+
+# Your Blog here
+```
+
+## Your Static Route
+
+Next.js (App Router) create a route for SSG `/blogs/[slug]/page.tsx`
+
+```tsx
+import {notFound} from "next/navigation";
+import {LocalPosts} from "postfolio";
+import {MDXRenderer} from "postfolio/renderer";
+import mdxComponents from "@/components";
+
+export async function generateStaticParams() {
+    const posts = await LocalPosts();
+
+    return posts.map((post) => ({slug: post.slug}));
+}
+
+export default async function Page({params}: { params: Promise<{ slug: string }> }) {
+    const {slug} = await params;
+    const posts = await LocalPosts();
+    const post = posts.find((itm) => itm.slug === slug);
+
+    if (!post) {
+        notFound();
+    }
+
+    return (
+        <main className={"px-60 py-16"}>
+            <h1>{post.meta.title}</h1>
+            <p>{post.meta.description}</p>
+            <MDXRenderer content={post.content} components={mdxComponents}/>
+        </main>
+    );
+}
+```
+
+## Own Components UI
+
+```tsx
+// components.tsx
+import React from "react";
+import Link from "next/link";
+
+type MDXComponents = Record<string, React.ComponentType<any>>;
+
+export const mdxComponents: MDXComponents = {
+    h1: (props) => <h1 className="text-3xl font-semibold mt-10 mb-4" {...props} />,
+    h2: (props) => <h2 className="text-2xl font-semibold mt-8 mb-3" {...props} />,
+    h3: (props) => <h3 className="text-xl font-semibold mt-6 mb-2" {...props} />,
+    p: (props) => <p className="leading-relaxed my-4" {...props} />,
+    a: ({ href = "#", ...props }) => (
+        <Link href={href} className="text-accent underline-offset-4 hover:underline" {...props} />
+    ),
+    ul: (props) => <ul className="list-disc pl-6 my-4" {...props} />,
+    ol: (props) => <ol className="list-decimal pl-6 my-4" {...props} />,
+    li: (props) => <li className="my-1" {...props} />,
+    blockquote: (props) => (
+        <blockquote className="border-l-2 border-default pl-4 italic my-4 text-foreground/70" {...props} />
+    ),
+    code: (props) => (
+        <code className="rounded bg-default/10 px-1.5 py-0.5 text-sm" {...props} />
+    ),
+    pre: (props) => (
+        <pre className="overflow-x-auto rounded-lg bg-default/10 p-4 my-4 text-sm" {...props} />
+    ),
+    img: (props) => <img className="rounded-lg my-4 max-w-full" {...props} />,
+    hr: () => <hr className="border-default my-8" />,
+};
+
+export default mdxComponents;
+```
+
+## API Referneces
+A functions provided by postfolio for SSG and List the blogs
+
+### LocalPosts() and DevToPosts()
+
+Both provide list of blogs from listed directory and devto blogs of `postfolio.config.ts` it return.
+
+```ts
+[
+    {
+        name: string,
+        slug: string,
+        meta: Graymatter,
+        content: MDXcode,
+        path: string
+    }
+]
+```
+
+

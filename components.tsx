@@ -18,10 +18,10 @@ export const mdxComponents: MDXComponents = {
         <blockquote className="border-l-2 border-default pl-4 italic my-4 text-foreground/70" {...props} />
     ),
     code: (props) => (
-        <code className="rounded bg-default/10 px-1.5 py-0.5 text-sm" {...props} />
+        <code className="rounded bg-default/10 px-1.5 py-0.5 text-sm w-full" {...props} />
     ),
     pre: (props) => (
-        <pre className="overflow-x-auto rounded-lg bg-default/10 p-4 my-4 text-sm" {...props} />
+        <pre className="overflow-x-auto rounded-lg bg-accent-soft p-4 my-4 text-sm" {...props} />
     ),
     img: (props) => <img className="rounded-lg my-4 max-w-full" {...props} />,
     hr: () => <hr className="border-default my-8" />,

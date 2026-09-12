@@ -1,6 +1,7 @@
 import {Button, Typography, Card} from "@heroui/react";
 import {Npm, Github} from "@thesvg/react";
 import {ArrowUpRight} from "lucide-react";
+import Link from "next/link";
 
 export default function Home() {
     return (
@@ -17,7 +18,9 @@ export default function Home() {
                     system.
                 </Typography.Paragraph>
                 <div className={"flex gap-2 items-center"}>
-                    <Button>Getting Started</Button>
+                    <Link href={"/blogs/getting-started"}>
+                        <Button>Getting Started</Button>
+                    </Link>
                     <a href={"https://npmjs.com/postfolio"} target={"_blank"}>
                         <Button><Npm variant="mono"/>View in npmjs</Button>
                     </a>
