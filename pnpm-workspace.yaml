@@ -1,9 +1,7 @@
-packages:
-  - "."
-  - "core"
-
 ignoredBuiltDependencies:
   - sharp
   - unrs-resolver
-onlyBuiltDependencies:
-  - esbuild
+packages:
+  - "apps/*"
+  - "packages/*"
+

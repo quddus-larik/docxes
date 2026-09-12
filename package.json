@@ -1,34 +1,32 @@
 {
-  "name": "my-app",
+  "name": "new",
   "version": "0.1.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint",
-    "dev:c": "pnpm tsx ./core/server.ts"
+    "lint": "eslint"
   },
   "dependencies": {
-    "@heroui/react": "^3.1.0",
-    "@heroui/styles": "^3.1.0",
-    "@phosphor-icons/react": "^2.1.10",
-    "next": "16.2.9",
-    "postfolio": "^1.0.15",
-    "react": "19.2.4",
-    "react-dom": "19.2.4",
-    "react-syntax-highlighter": "^16.1.1"
+    "@heroui/react": "^3.2.5",
+    "@heroui/styles": "^3.2.5",
+    "@thesvg/react": "^3.3.4",
+    "lucide-react": "^1.45.0",
+    "next": "16.3.4",
+    "postfolio": "workspace:*",
+    "react": "19.2.8",
+    "react-dom": "19.2.8"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "@types/react-syntax-highlighter": "^15.5.13",
     "eslint": "^9",
-    "eslint-config-next": "16.2.9",
+    "eslint-config-next": "16.3.4",
     "tailwindcss": "^4",
-    "tsx": "^4.22.4",
     "typescript": "^5"
-  }
+  },
+  "packageManager": "pnpm@10.33.0"
 }

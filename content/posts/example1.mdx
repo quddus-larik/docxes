@@ -1,0 +1,33 @@
+---
+title: "Styling with Tailwind CSS v4"
+description: "How Tailwind CSS v4 changes the game with CSS-first configuration and OKLCH colors."
+date: "2026-08-28"
+tags: ["tailwind", "css", "design"]
+author: "Quddus"
+readingTime: 4
+---
+
+# Styling with Tailwind CSS v4
+
+Tailwind CSS v4 moves configuration from JavaScript to CSS, making theming more natural and performant.
+
+## What's New?
+
+- **CSS-first config** — define your theme with `@theme` in plain CSS
+- **OKLCH color space** — perceptually uniform colors out of the box
+- **Zero config** — works without a `tailwind.config.js` file
+
+## Example Theme
+
+```css
+@import "tailwindcss";
+
+@theme {
+  --color-accent: oklch(0.7 0.15 200);
+  --radius-lg: 1rem;
+}
+```
+
+## Conclusion
+
+Tailwind v4 keeps the utility-first workflow while embracing modern CSS features.

@@ -39,14 +39,3 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
-
-.pnpm-store
-
-# Agentic
-.claude
-
-# heroui-agents-md
-.heroui-docs
-
-# mimocode
-.mimocode
