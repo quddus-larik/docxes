@@ -14,7 +14,7 @@ export interface PostItem {
 
 export async function PostfolioConfig() {
     const projectRoot = process.cwd();
-    const configPath = path.resolve(projectRoot, "postfolio.config.ts");
+    const configPath = path.resolve(/*turbopackIgnore: true*/ projectRoot, "postfolio.config.ts");
 
     if (!existsSync(configPath)) {
         throw new Error(`Config file not found at ${configPath}`);
@@ -52,7 +52,7 @@ export async function LocalPosts(): Promise<PostItem[]> {
     }
 
     const projectRoot = process.cwd();
-    const postsDir = path.resolve(projectRoot, configData.localPosts.dir);
+    const postsDir = path.resolve(/*turbopackIgnore: true*/ projectRoot, configData.localPosts.dir);
     if (!existsSync(postsDir)) {
         throw new Error(`postsDir not found at ${postsDir}`);
     }
